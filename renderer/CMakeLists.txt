@@ -6,15 +6,16 @@ project(Raymarcher 	VERSION 0.1
 
 include(CheckLanguage)
 
-add_library( raymarcher-common INTERFACE circleRenderer.h cycleTimer.h util.h sceneLoader.h image.h )
-
-target_compile_features(raymarcher-common PUBLIC cxx_std_11)
-set_target_properties(raymarcher-common PROPERTIES CXX_EXTENSIONS OFF)
+add_library( raymarcher-common INTERFACE )
+target_sources( raymarcher-common INTERFACE circleRenderer.h cycleTimer.h util.h sceneLoader.h image.h )
 
 add_library( raymarcher-seq STATIC refRenderer.h refRenderer.cpp )
 target_link_libraries( raymarcher-seq PUBLIC raymarcher-common )
 
-add_executable( raymarcher-driver
+target_compile_features(raymarcher-seq PUBLIC cxx_std_11)
+set_target_properties(raymarcher-seq PROPERTIES CXX_EXTENSIONS OFF)
+
+add_executable( raymarcher
   main.cpp
   benchmark.cpp
   display.cpp
@@ -22,25 +23,28 @@ add_executable( raymarcher-driver
   ppm.h
   ppm.cpp
   sceneLoader.cpp )
-target_link_libraries( raymarcher-driver PUBLIC raymarcher-seq)
+target_link_libraries( raymarcher PUBLIC raymarcher-seq)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
 
-target_link_libraries(raymarcher-driver ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} )
+target_link_libraries( raymarcher PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} )
 
 check_language(CUDA)
 if(CMAKE_CUDA_COMPILER)
   message(STATUS "CUDA support detected.  Compiling with CUDA.")
   enable_language(CUDA)
 
-  set_property(TARGET raymarcher-driver
+  set_property(TARGET raymarcher
                PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 
   add_library( raymarcher-cuda STATIC cudaRenderer.h cudaRenderer.cu )
   target_link_libraries( raymarcher-cuda PUBLIC raymarcher-common )
-  target_link_libraries( raymarcher-driver PUBLIC raymarcher-cuda )
+  target_link_libraries( raymarcher PUBLIC raymarcher-cuda )
+
+  target_compile_features(raymarcher-cuda PUBLIC cxx_std_11)
+  set_target_properties(raymarcher-cuda PROPERTIES CXX_EXTENSIONS OFF)
 
   # https://devblogs.nvidia.com/building-cuda-applications-cmake/
   if(APPLE)

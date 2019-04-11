@@ -6,3 +6,7 @@
 *.fatbin
 
 *.sublime-workspace
+build/
+xcode/
+
+.DS_Store
