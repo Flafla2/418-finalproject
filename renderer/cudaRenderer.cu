@@ -144,18 +144,7 @@ CudaRenderer::~CudaRenderer() {
         delete image;
     }
 
-    if (position) {
-        delete [] position;
-        delete [] velocity;
-        delete [] color;
-        delete [] radius;
-    }
-
     if (cudaDevicePosition) {
-        cudaFree(cudaDevicePosition);
-        cudaFree(cudaDeviceVelocity);
-        cudaFree(cudaDeviceColor);
-        cudaFree(cudaDeviceRadius);
         cudaFree(cudaDeviceImageData);
     }
 }
