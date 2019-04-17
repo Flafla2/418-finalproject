@@ -4,7 +4,9 @@
 #include <string>
 
 #include "refRenderer.h"
+#if WITH_CUDA
 #include "cudaRenderer.h"
+#endif
 #include "platformgl.h"
 
 
@@ -16,10 +18,11 @@ void CheckBenchmark(CircleRenderer* ref_renderer, CircleRenderer* cuda_renderer,
 
 void usage(const char* progname) {
     printf("Usage: %s [options] scenename\n", progname);
-    printf("Valid scenenames are: rgb, rgby, rand10k, rand100k, biglittle, littlebig, pattern, bouncingballs, fireworks, hypnosis, snow, snowsingle\n");
+    printf("Valid scenenames are: test\n");
     printf("Program Options:\n");
     printf("  -b  --bench <START:END>    Benchmark mode, do not create display. Time frames [START,END)\n");
-    printf("  -c  --check                Check correctness of output\n");
+    printf("                             Requires CUDA-capable machine.\n");
+    printf("  -c  --check                Check correctness of output.  Requires CUDA-capable machine.\n");
     printf("  -f  --file  <FILENAME>     Dump frames in benchmark mode (FILENAME_xxxx.ppm)\n");
     printf("  -r  --renderer <ref/cuda>  Select renderer: ref or cuda\n");
     printf("  -s  --size  <INT>          Make rendered image <INT>x<INT> pixels\n");
@@ -94,31 +97,9 @@ int main(int argc, char** argv)
 
     sceneNameStr = argv[optind];
 
-    if (sceneNameStr.compare("snow") == 0) {
-        sceneName = SNOWFLAKES;
-    } else if (sceneNameStr.compare("snowsingle") == 0) {
-        sceneName = SNOWFLAKES_SINGLE_FRAME;
-    } else if (sceneNameStr.compare("rgb") == 0) {
-        sceneName = CIRCLE_RGB;
-    } else if (sceneNameStr.compare("rgby") == 0) {
-        sceneName = CIRCLE_RGBY;
-    } else if (sceneNameStr.compare("rand10k") == 0) {
-        sceneName = CIRCLE_TEST_10K;
-    } else if (sceneNameStr.compare("rand100k") == 0) {
-        sceneName = CIRCLE_TEST_100K;
-    } else if (sceneNameStr.compare("pattern") == 0) {
-        sceneName = PATTERN;
-    } else if (sceneNameStr.compare("biglittle") == 0) {
-        sceneName = BIG_LITTLE;
-    } else if (sceneNameStr.compare("littlebig") == 0) {
-        sceneName = LITTLE_BIG;
-    } else if (sceneNameStr.compare("bouncingballs") == 0) {
-        sceneName = BOUNCING_BALLS;  
-    } else if (sceneNameStr.compare("hypnosis") == 0) { 
-        sceneName = HYPNOSIS;           
-    } else if (sceneNameStr.compare("fireworks") == 0) { 
-        sceneName = FIREWORKS;    
-    }else {
+    if (sceneNameStr.compare("test") == 0) {
+        sceneName = TEST_SCENE;
+    } else {
         fprintf(stderr, "Unknown scene name (%s)\n", sceneNameStr.c_str());
         usage(argv[0]);
         return 1;
@@ -129,6 +110,7 @@ int main(int argc, char** argv)
     CircleRenderer* renderer;
 
     if (checkCorrectness) {
+#if WITH_CUDA
         // Need both the renderers
 
         CircleRenderer* ref_renderer;
@@ -146,13 +128,26 @@ int main(int argc, char** argv)
 
         // Check the correctness
         CheckBenchmark(ref_renderer, cuda_renderer, 0, 1, frameFilename);
+#else
+        fprintf(stderr, "Checking correctness is not supported when compiling without CUDA.\n");
+        usage(argv[0]);
+        exit(1);
+#endif
     }
     else {
-
+#if WITH_CUDA
         if (useRefRenderer)
             renderer = new RefRenderer();
         else
             renderer = new CudaRenderer();
+#else
+        if (!useRefRenderer) {
+            fprintf(stderr, "Rendering with CUDA is not supported when compiling without CUDA.\n");
+            exit(1);
+        }
+        
+        renderer = new RefRenderer();
+#endif
 
         renderer->allocOutputImage(imageSize, imageSize);
         renderer->loadScene(sceneName);

@@ -3,23 +3,8 @@
 
 struct Image;
 
-// fireworks constants
-#define NUM_FIREWORKS 15
-#define NUM_SPARKS 20
-
 typedef enum {
-    CIRCLE_RGB,
-    CIRCLE_RGBY,
-    CIRCLE_TEST_10K,
-    CIRCLE_TEST_100K,
-    PATTERN,
-    SNOWFLAKES,
-    BOUNCING_BALLS, 
-    HYPNOSIS, 
-    FIREWORKS, 
-    SNOWFLAKES_SINGLE_FRAME,
-    BIG_LITTLE,
-    LITTLE_BIG
+    TEST_SCENE
 } SceneName;
 
 

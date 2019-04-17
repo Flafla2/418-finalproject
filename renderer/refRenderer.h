@@ -39,9 +39,7 @@ public:
     void dumpParticles(const char* filename);
 
     void shadePixel(
-        int circleIndex,
         float pixelCenterX, float pixelCenterY,
-        float px, float py, float pz,
         float* pixelData);
 };
 

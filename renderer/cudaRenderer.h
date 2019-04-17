@@ -7,7 +7,6 @@
 
 #include "circleRenderer.h"
 
-
 class CudaRenderer : public CircleRenderer {
 
 private:
@@ -50,6 +49,5 @@ public:
         float pixelCenterX, float pixelCenterY,
         float* pixelData);
 };
-
 
 #endif

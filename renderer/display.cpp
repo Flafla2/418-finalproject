@@ -138,8 +138,13 @@ renderPicture() {
     }
 }
 
-void
-startRendererWithDisplay(CircleRenderer* renderer) {
+void handleResize(int width, int height) {
+    // snap back to original size
+    if (width != gDisplay.width || height != gDisplay.height)
+        glutReshapeWindow(gDisplay.width, gDisplay.height);
+}
+
+void startRendererWithDisplay(CircleRenderer* renderer) {
 
     // setup the display
 
@@ -157,8 +162,9 @@ startRendererWithDisplay(CircleRenderer* renderer) {
 
     glutInitWindowSize(gDisplay.width, gDisplay.height);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-    glutCreateWindow("CMU 15-418 Assignment 2 - Circle Renderer");
+    glutCreateWindow("CMU 15-418 Raymarcher");
     glutDisplayFunc(handleDisplay);
     glutKeyboardFunc(handleKeyPress);
+    glutReshapeFunc(handleResize);
     glutMainLoop();
 }
