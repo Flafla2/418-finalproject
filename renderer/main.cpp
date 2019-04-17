@@ -25,7 +25,8 @@ void usage(const char* progname) {
     printf("  -c  --check                Check correctness of output.  Requires CUDA-capable machine.\n");
     printf("  -f  --file  <FILENAME>     Dump frames in benchmark mode (FILENAME_xxxx.ppm)\n");
     printf("  -r  --renderer <ref/cuda>  Select renderer: ref or cuda\n");
-    printf("  -s  --size  <INT>          Make rendered image <INT>x<INT> pixels\n");
+    printf("  -w  --width  <INT>         Set width (default: 800px)\n");
+    printf("  -h  --height <INT>         Set height (default: 600px)\n");
     printf("  -?  --help                 This message\n");
 }
 
@@ -35,7 +36,8 @@ int main(int argc, char** argv)
 
     int benchmarkFrameStart = -1;
     int benchmarkFrameEnd = -1;
-    int imageSize = 1150;
+    int imageWidth = 800;
+    int imageHeight = 600;
 
     std::string sceneNameStr;
     std::string frameFilename;
@@ -52,11 +54,12 @@ int main(int argc, char** argv)
         {"bench",    1, 0,  'b'},
         {"file",     1, 0,  'f'},
         {"renderer", 1, 0,  'r'},
-        {"size",     1, 0,  's'},
+        {"width",    1, 0,  'w'},
+        {"height",   1, 0,  'h'},
         {0 ,0, 0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "b:f:r:s:c?", long_options, NULL)) != EOF) {
+    while ((opt = getopt_long(argc, argv, "b:f:r:w:h:c?", long_options, NULL)) != EOF) {
 
         switch (opt) {
         case 'b':
@@ -77,8 +80,11 @@ int main(int argc, char** argv)
                 useRefRenderer = false;
             }
             break;
-        case 's':
-            imageSize = atoi(optarg);
+        case 'w':
+            imageWidth = atoi(optarg);
+            break;
+        case 'h':
+            imageHeight = atoi(optarg);
             break;
         case '?':
         default:
@@ -105,7 +111,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    printf("Rendering to %dx%d image\n", imageSize, imageSize);
+    printf("Rendering to %dx%d image\n", imageWidth, imageHeight);
 
     CircleRenderer* renderer;
 
@@ -119,10 +125,10 @@ int main(int argc, char** argv)
         ref_renderer = new RefRenderer();
         cuda_renderer = new CudaRenderer();
 
-        ref_renderer->allocOutputImage(imageSize, imageSize);
+        ref_renderer->allocOutputImage(imageWidth, imageHeight);
         ref_renderer->loadScene(sceneName);
         ref_renderer->setup();
-        cuda_renderer->allocOutputImage(imageSize, imageSize);
+        cuda_renderer->allocOutputImage(imageWidth, imageHeight);
         cuda_renderer->loadScene(sceneName);
         cuda_renderer->setup();
 
@@ -149,7 +155,7 @@ int main(int argc, char** argv)
         renderer = new RefRenderer();
 #endif
 
-        renderer->allocOutputImage(imageSize, imageSize);
+        renderer->allocOutputImage(imageWidth, imageHeight);
         renderer->loadScene(sceneName);
         renderer->setup();
 
