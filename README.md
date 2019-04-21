@@ -21,7 +21,7 @@ This will create an xcode project in a new directory called `xcode`.  To clean a
 $ make clean
 ```
 
-You will notice that the `Makefile` in the root directory is a thin layer on top of CMake.  Therefore you can build for other platforms / tools that are supported by `cmake`.
+You will notice that the `Makefile` in the root directory is a thin layer on top of CMake.  Therefore you can build for other platforms / tools that are supported by `cmake`.  For example, you can open the `renderer/` folder in CLion and it will work out of the box.
 
 ## Running
 
