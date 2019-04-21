@@ -10,9 +10,9 @@
 #include "platformgl.h"
 
 
-void startRendererWithDisplay(CircleRenderer* renderer);
-void startBenchmark(CircleRenderer* renderer, int startFrame, int totalFrames, const std::string& frameFilename);
-void CheckBenchmark(CircleRenderer* ref_renderer, CircleRenderer* cuda_renderer,
+void startRendererWithDisplay(Renderer* renderer);
+void startBenchmark(Renderer* renderer, int startFrame, int totalFrames, const std::string& frameFilename);
+void CheckBenchmark(Renderer* ref_renderer, Renderer* cuda_renderer,
                         int benchmarkFrameStart, int totalFrames, const std::string& frameFilename);
 
 
@@ -113,14 +113,14 @@ int main(int argc, char** argv)
 
     printf("Rendering to %dx%d image\n", imageWidth, imageHeight);
 
-    CircleRenderer* renderer;
+    Renderer* renderer;
 
     if (checkCorrectness) {
 #if WITH_CUDA
         // Need both the renderers
 
-        CircleRenderer* ref_renderer;
-        CircleRenderer* cuda_renderer;
+        Renderer* ref_renderer;
+        Renderer* cuda_renderer;
 
         ref_renderer = new RefRenderer();
         cuda_renderer = new CudaRenderer();

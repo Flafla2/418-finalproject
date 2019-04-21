@@ -1,21 +1,16 @@
 #ifndef __REF_RENDERER_H__
 #define __REF_RENDERER_H__
 
-#include "circleRenderer.h"
+#include "renderer.h"
+#include "Scene.h"
 
-
-class RefRenderer : public CircleRenderer {
+class RefRenderer : public Renderer {
 
 private:
 
     Image* image;
     SceneName sceneName;
-
-    int numCircles;
-    float* position;
-    float* velocity;
-    float* color;
-    float* radius;
+    Scene *scene;
 
 public:
 
@@ -35,8 +30,6 @@ public:
     void advanceAnimation();
 
     void render();
-
-    void dumpParticles(const char* filename);
 
     void shadePixel(
         float pixelCenterX, float pixelCenterY,

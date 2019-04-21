@@ -8,6 +8,8 @@
 #include "sceneLoader.h"
 #include "util.h"
 
+#include "Primitive.h"
+
 // randomFloat --
 //
 // return a random floating point value between 0 and 1
@@ -16,14 +18,16 @@ randomFloat() {
     return static_cast<float>(rand()) / RAND_MAX;
 }
 
-void SceneLoader::loadScene(SceneName sceneName)
+Scene *SceneLoader::loadScene(SceneName sceneName)
 {
+    std::vector<Primitive *> prims;
     if (sceneName == TEST_SCENE) {
-        // TODO
+        prims.push_back(new Sphere(glm::vec3(0,0,0), 1.f));
     } else {
         fprintf(stderr, "Error: cann't load scene (unknown scene)\n");
-        return;
+        return nullptr;
     }
 
     printf("Loaded scene\n");
+    return new Scene(prims);
 }

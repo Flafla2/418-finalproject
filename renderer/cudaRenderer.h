@@ -5,9 +5,9 @@
 #define uint unsigned int
 #endif
 
-#include "circleRenderer.h"
+#include "renderer.h"
 
-class CudaRenderer : public CircleRenderer {
+class CudaRenderer : public Renderer {
 
 private:
 

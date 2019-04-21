@@ -1,5 +1,5 @@
-#ifndef __CIRCLE_RENDERER_H__
-#define __CIRCLE_RENDERER_H__
+#ifndef __RENDERER_H__
+#define __RENDERER_H__
 
 struct Image;
 
@@ -7,12 +7,11 @@ typedef enum {
     TEST_SCENE
 } SceneName;
 
-
-class CircleRenderer {
+class Renderer {
 
 public:
 
-    virtual ~CircleRenderer() { };
+    virtual ~Renderer() { };
 
     virtual const Image* getImage() = 0;
 
@@ -27,8 +26,6 @@ public:
     virtual void advanceAnimation() = 0;
 
     virtual void render() = 0;
-
-    //virtual void dumpParticles(const char* filename) {}
 
 };
 

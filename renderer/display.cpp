@@ -1,6 +1,6 @@
 #include <algorithm>
 
-#include "circleRenderer.h"
+#include "renderer.h"
 #include "cycleTimer.h"
 #include "image.h"
 #include "platformgl.h"
@@ -17,7 +17,7 @@ static struct {
     bool pauseSim;
     double lastFrameTime;
 
-    CircleRenderer* renderer;
+    Renderer* renderer;
 
 } gDisplay;
 
@@ -144,7 +144,7 @@ void handleResize(int width, int height) {
         glutReshapeWindow(gDisplay.width, gDisplay.height);
 }
 
-void startRendererWithDisplay(CircleRenderer* renderer) {
+void startRendererWithDisplay(Renderer* renderer) {
 
     // setup the display
 

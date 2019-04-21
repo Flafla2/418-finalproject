@@ -7,7 +7,7 @@ project(Raymarcher 	VERSION 0.1
 include(CheckLanguage)
 
 add_library( raymarcher-common INTERFACE )
-target_sources( raymarcher-common INTERFACE circleRenderer.h cycleTimer.h util.h sceneLoader.h image.h )
+target_sources( raymarcher-common INTERFACE renderer.h cycleTimer.h util.h sceneLoader.h image.h Scene.cpp Scene.h Primitive.cpp Primitive.h )
 
 add_library( raymarcher-seq STATIC refRenderer.h refRenderer.cpp )
 target_link_libraries( raymarcher-seq PUBLIC raymarcher-common )
@@ -27,7 +27,8 @@ target_link_libraries( raymarcher PUBLIC raymarcher-seq)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
-include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
+find_package(GLM REQUIRED)
+include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
 
 target_link_libraries( raymarcher PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} )
 

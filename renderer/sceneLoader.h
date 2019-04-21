@@ -1,10 +1,11 @@
 #ifndef __SCENE_LOADER_H__
 #define __SCENE_LOADER_H__
 
-#include "circleRenderer.h"
+#include "renderer.h"
+#include "Scene.h"
 
 namespace SceneLoader {
-    void loadScene(SceneName sceneName);
+    Scene *loadScene(SceneName sceneName);
 }
 
 #endif

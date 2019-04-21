@@ -1,7 +1,7 @@
 #include <string>
 #include <math.h>
 
-#include "circleRenderer.h"
+#include "renderer.h"
 #include "cycleTimer.h"
 #include "image.h"
 #include "ppm.h"
@@ -52,7 +52,7 @@ static void compare_images(const Image* ref_image, const Image* cuda_image) {
 
 void
 startBenchmark(
-    CircleRenderer* renderer,
+    Renderer* renderer,
     int startFrame,
     int totalFrames,
     const std::string& frameFilename)
@@ -124,8 +124,8 @@ startBenchmark(
 
 void
 CheckBenchmark(
-    CircleRenderer* ref_renderer,
-    CircleRenderer* cuda_renderer,
+    Renderer* ref_renderer,
+    Renderer* cuda_renderer,
     int startFrame,
     int totalFrames,
     const std::string& frameFilename)

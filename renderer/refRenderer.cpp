@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <vector>
 
+#include <glm/vec3.hpp>
+#include <glm/gtc/quaternion.hpp>
+
 #include "refRenderer.h"
 #include "image.h"
 #include "sceneLoader.h"
@@ -11,12 +14,6 @@
 
 RefRenderer::RefRenderer() {
     image = NULL;
-
-    numCircles = 0;
-    position = NULL;
-    velocity = NULL;
-    color = NULL;
-    radius = NULL;
 }
 
 RefRenderer::~RefRenderer() {
@@ -25,12 +22,6 @@ RefRenderer::~RefRenderer() {
         delete image;
     }
 
-    if (position) {
-        delete [] position;
-        delete [] velocity;
-        delete [] color;
-        delete [] radius;
-    }
 }
 
 const Image*
@@ -65,9 +56,9 @@ RefRenderer::clearImage() {
 }
 
 void
-RefRenderer::loadScene(SceneName scene) {
-    sceneName = scene;
-    SceneLoader::loadScene(sceneName);
+RefRenderer::loadScene(SceneName name) {
+    sceneName = name;
+    scene = SceneLoader::loadScene(sceneName);
 }
 
 // advanceAnimation --
@@ -90,6 +81,9 @@ RefRenderer::shadePixel(
     float pixelCenterX, float pixelCenterY,
     float* pixelData)
 {
+    //glm::vec3 camPos(0.f, 0.f, -5.f);
+    //glm::quat camRot = glm::
+
     pixelData[0] = pixelCenterX;
     pixelData[1] = pixelCenterY;
     pixelData[2] = 0.0;
@@ -109,7 +103,7 @@ RefRenderer::render() {
     for (int pixelY = 0; pixelY < image->height; pixelY++) {
 
         // pointer to pixel data
-        float* imgPtr = &image->data[4 * (pixelY * image->width)];
+        float *imgPtr = &image->data[4 * (pixelY * image->width)];
 
         for (int pixelX = 0; pixelX < image->width; pixelX++) {
 
@@ -127,19 +121,4 @@ RefRenderer::render() {
             imgPtr += 4;
         }
     }
-}
-
-void RefRenderer::dumpParticles(const char* filename) {
-
-    FILE* output = fopen(filename, "w");
-
-    fprintf(output, "%d\n", numCircles);
-    for (int i=0; i<numCircles; i++) {
-        fprintf(output, "%f %f %f   %f %f %f   %f\n",
-                position[3*i+0], position[3*i+1], position[3*i+2],
-                velocity[3*i+0], velocity[3*i+1], velocity[3*i+2],
-                radius[i]);
-    }
-    fclose(output);
-
 }
