@@ -33,7 +33,8 @@ public:
 
     void shadePixel(
         float pixelCenterX, float pixelCenterY,
-        float* pixelData);
+        float* pixelData, glm::mat4x4 invProj,
+        glm::mat4x4 invView, glm::vec3 camPos);
 };
 
 

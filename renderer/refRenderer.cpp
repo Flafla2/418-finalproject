@@ -3,9 +3,13 @@
 #include <math.h>
 #include <stdio.h>
 #include <vector>
+#include <ctime>
+#include <iostream>
 
 #include <glm/vec3.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include "refRenderer.h"
 #include "image.h"
@@ -79,14 +83,46 @@ RefRenderer::advanceAnimation() {
 void
 RefRenderer::shadePixel(
     float pixelCenterX, float pixelCenterY,
-    float* pixelData)
+    float* pixelData, glm::mat4x4 invProj,
+    glm::mat4x4 invView, glm::vec3 camPos)
 {
-    //glm::vec3 camPos(0.f, 0.f, -5.f);
-    //glm::quat camRot = glm::
+    // Inverse project to get point on near clip plane (in NDC, z = -1 corresponds to the
+    // near clip plane.  Also w = 1.0 in NDC)
+    glm::vec4 ptView  = invProj * glm::vec4(pixelCenterX*2-1, pixelCenterY*2-1, -1.f, 1.f);
+    // Apply homogenous coordinate from projection matrix
+    ptView /= ptView.w;
+    // Bring view space point into world space
+    glm::vec4 ptWorld = invView * ptView;
 
-    pixelData[0] = pixelCenterX;
-    pixelData[1] = pixelCenterY;
-    pixelData[2] = 0.0;
+    glm::vec3 ray = glm::normalize(glm::vec3(ptWorld) - camPos);
+
+    float t = 0.f;
+    for (int march = 0; march < 64; ++march) {
+
+        glm::vec3 p = camPos + ray * t;
+        float sdf = scene->sdf(p);
+
+        if (sdf < 0.01f) {
+            // hit something!
+            glm::vec3 normal = scene->normal(p);
+            const float rt1_3 = 0.5773502692f;
+            float ndotl = glm::dot(normal, -glm::vec3(rt1_3,-rt1_3,rt1_3));
+
+            pixelData[0] = pixelData[1] = pixelData[2] = ndotl;
+            pixelData[3] = 1.0f;
+
+            return;
+        } else if (t > 10.0f) {
+            break;
+        } else {
+            t += sdf;
+        }
+
+    }
+
+    pixelData[0] = (ray.x+1)/2;
+    pixelData[1] = (ray.y+1)/2;
+    pixelData[2] = (ray.z+1)/2;
     pixelData[3] = 1.0;
 }
 
@@ -94,6 +130,20 @@ void
 RefRenderer::render() {
     float invWidth = 1.f / image->width;
     float invHeight = 1.f / image->height;
+
+    static std::clock_t begin = clock();
+    std::clock_t cur = clock();
+
+    double elapsed_secs = double(cur - begin) / CLOCKS_PER_SEC;
+
+    glm::vec3 camPos(glm::sin(elapsed_secs) * 5.0f, 0.f, glm::cos(elapsed_secs) * 5.0f);
+    glm::vec3 camLook(0.f, 0.f, 0.f);
+    glm::vec3 camUp(0.f, 1.f, 0.f);
+
+    static float aspect = float(image->width) / image->height;
+
+    glm::mat4x4 invView = glm::inverse(glm::lookAt(camPos, camLook, camUp));
+    static glm::mat4x4 invProj = glm::inverse(glm::perspective(30.0f, aspect, 0.3f, 200.0f));
 
     // for each pixel in the bounding box, determine the circle's
     // contribution to the pixel.  The contribution is computed in
@@ -116,8 +166,8 @@ RefRenderer::render() {
             // the pixel center into this coordinate space prior
             // to calling shadePixel.
             float pixelCenterNormX = invWidth * (static_cast<float>(pixelX) + 0.5f);
-            float pixelCenterNormY = invHeight * (static_cast<float>(pixelY) + 0.5f);
-            shadePixel(pixelCenterNormX, pixelCenterNormY, imgPtr);
+            float pixelCenterNormY = 1.0f - invHeight * (static_cast<float>(pixelY) + 0.5f);
+            shadePixel(pixelCenterNormX, pixelCenterNormY, imgPtr, invProj, invView, camPos);
             imgPtr += 4;
         }
     }
