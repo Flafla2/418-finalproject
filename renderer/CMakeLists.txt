@@ -9,7 +9,7 @@ include(CheckLanguage)
 add_library( raymarcher-common INTERFACE )
 target_sources( raymarcher-common INTERFACE renderer.h cycleTimer.h util.h sceneLoader.h image.h Scene.cpp Scene.h Primitive.cpp Primitive.h )
 
-add_library( raymarcher-seq STATIC refRenderer.h refRenderer.cpp )
+add_library( raymarcher-seq STATIC refRenderer.h refRenderer.cpp RefScene.cpp RefScene.h)
 target_link_libraries( raymarcher-seq PUBLIC raymarcher-common )
 
 target_compile_features(raymarcher-seq PUBLIC cxx_std_11)
@@ -42,7 +42,7 @@ if(CMAKE_CUDA_COMPILER)
 
   add_compile_definitions(WITH_CUDA)
 
-  add_library( raymarcher-cuda STATIC cudaRenderer.h cudaRenderer.cu )
+  add_library( raymarcher-cuda STATIC cudaRenderer.h cudaRenderer.cu CudaScene.cu CudaScene.h)
   target_link_libraries( raymarcher-cuda PUBLIC raymarcher-common )
   target_link_libraries( raymarcher PUBLIC raymarcher-cuda )
 

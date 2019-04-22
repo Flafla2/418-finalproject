@@ -5,49 +5,44 @@
 #define uint unsigned int
 #endif
 
+#define GLM_FORCE_CUDA
+#include <glm/glm.hpp>
+
 #include "renderer.h"
+#include "Scene.h"
 
 class CudaRenderer : public Renderer {
 
 private:
-
     Image* image;
     SceneName sceneName;
+    Scene *scene;
 
-    int numCircles;
-    float* position;
-    float* velocity;
-    float* color;
-    float* radius;
-
-    float* cudaDevicePosition;
-    float* cudaDeviceVelocity;
-    float* cudaDeviceColor;
-    float* cudaDeviceRadius;
     float* cudaDeviceImageData;
 
 public:
 
     CudaRenderer();
-    virtual ~CudaRenderer();
+    ~CudaRenderer();
 
-    const Image* getImage();
+    const Image* getImage() override;
 
-    void setup();
+    void setup() override;
 
-    void loadScene(SceneName name);
+    void loadScene(SceneName name) override;
 
-    void allocOutputImage(int width, int height);
+    void allocOutputImage(int width, int height) override;
 
-    void clearImage();
+    void clearImage() override;
 
-    void advanceAnimation();
+    void advanceAnimation() override;
 
-    void render();
+    void render() override;
 
     void shadePixel(
-        float pixelCenterX, float pixelCenterY,
-        float* pixelData);
+            float pixelCenterX, float pixelCenterY,
+            float* pixelData, glm::mat4x4 invProj,
+            glm::mat4x4 invView, glm::vec3 camPos);
 };
 
 #endif

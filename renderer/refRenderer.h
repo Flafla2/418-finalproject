@@ -15,21 +15,21 @@ private:
 public:
 
     RefRenderer();
-    virtual ~RefRenderer();
+    ~RefRenderer() override;
 
-    const Image* getImage();
+    const Image* getImage() override;
 
-    void setup();
+    void setup() override;
 
-    void loadScene(SceneName name);
+    void loadScene(SceneName name) override;
 
-    void allocOutputImage(int width, int height);
+    void allocOutputImage(int width, int height) override;
 
-    void clearImage();
+    void clearImage() override;
 
-    void advanceAnimation();
+    void advanceAnimation() override;
 
-    void render();
+    void render() override;
 
     void shadePixel(
         float pixelCenterX, float pixelCenterY,

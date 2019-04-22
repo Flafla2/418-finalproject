@@ -4,6 +4,7 @@
 struct Image;
 
 typedef enum {
+    INVALID,
     TEST_SCENE
 } SceneName;
 
@@ -11,7 +12,7 @@ class Renderer {
 
 public:
 
-    virtual ~Renderer() { };
+    virtual ~Renderer() = default;
 
     virtual const Image* getImage() = 0;
 

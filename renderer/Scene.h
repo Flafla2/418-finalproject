@@ -5,17 +5,11 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 
-#include "Primitive.h"
-
 class Scene {
 public:
-    Scene(std::vector<Primitive *> primitives);
-    ~Scene();
+    virtual float sdf(glm::vec3 p) = 0;
 
-    float sdf(glm::vec3 p);
     glm::vec3 normal(glm::vec3 p);
-private:
-    std::vector<Primitive *> primitives;
 };
 
 

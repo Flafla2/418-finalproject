@@ -17,71 +17,59 @@
 #include "util.h"
 
 RefRenderer::RefRenderer() {
-    image = NULL;
+    image = nullptr;
+    scene = nullptr;
+    sceneName = INVALID;
 }
 
 RefRenderer::~RefRenderer() {
-
-    if (image) {
-        delete image;
-    }
-
+    delete image;
 }
 
-const Image*
-RefRenderer::getImage() {
+const Image* RefRenderer::getImage() {
     return image;
 }
 
-void
-RefRenderer::setup() {
+void RefRenderer::setup() {
     // nothing to do here
 }
 
-// allocOutputImage --
-//
-// Allocate buffer the renderer will render into.  Check status of
-// image first to avoid memory leak.
-void
-RefRenderer::allocOutputImage(int width, int height) {
+/// Allocate buffer the renderer will render into.
+/// \param width Image width
+/// \param height Image height
+void RefRenderer::allocOutputImage(int width, int height) {
+    delete image; // does nothing if image == nullptr
 
-    if (image)
-        delete image;
     image = new Image(width, height);
 }
 
-// clearImage --
-//
-// Clear's the renderer's target image.  The state of the image after
-// the clear depends on the scene being rendered.
-void
-RefRenderer::clearImage() {
+
+/// Clear's the renderer's target image.  The state of the image after
+/// the clear depends on the scene being rendered.
+void RefRenderer::clearImage() {
     image->clear(1.f, 1.f, 1.f, 1.f);
 }
 
-void
-RefRenderer::loadScene(SceneName name) {
+/// Loads the scene with the given scene name
+/// \param name SceneName to use
+void RefRenderer::loadScene(SceneName name) {
     sceneName = name;
-    scene = SceneLoader::loadScene(sceneName);
+    scene = SceneLoader::loadSceneRef(sceneName);
 }
 
-// advanceAnimation --
-//
-// Advance the simulation one time step.  Updates all circle positions
-// and velocities
-void
-RefRenderer::advanceAnimation() {
+/// Advance the simulation one time step.
+void RefRenderer::advanceAnimation() {
     
 }
 
-// shadePixel --
-//
-// Computes the contribution of the specified circle to the
-// given pixel.  All values are provided in normalized space, where
-// the screen spans [0,2]^2.  The color/opacity of the circle is
-// computed at the pixel center.
-void
-RefRenderer::shadePixel(
+/// Shades the scene at the specified pixel, given the pixel coordinate in clip space.
+/// \param pixelCenterX X coordinate of center of pixel in [0,1] range
+/// \param pixelCenterY Y coordinate of center of pixel in [0,1] range
+/// \param pixelData Pointer to data that will be written
+/// \param invProj Inverse of camera projection matrix
+/// \param invView Inverse of camera view matrix
+/// \param camPos Camera position
+void RefRenderer::shadePixel(
     float pixelCenterX, float pixelCenterY,
     float* pixelData, glm::mat4x4 invProj,
     glm::mat4x4 invView, glm::vec3 camPos)
@@ -126,8 +114,7 @@ RefRenderer::shadePixel(
     pixelData[3] = 1.0;
 }
 
-void
-RefRenderer::render() {
+void RefRenderer::render() {
     float invWidth = 1.f / image->width;
     float invHeight = 1.f / image->height;
 
@@ -145,11 +132,6 @@ RefRenderer::render() {
     glm::mat4x4 invView = glm::inverse(glm::lookAt(camPos, camLook, camUp));
     static glm::mat4x4 invProj = glm::inverse(glm::perspective(30.0f, aspect, 0.3f, 200.0f));
 
-    // for each pixel in the bounding box, determine the circle's
-    // contribution to the pixel.  The contribution is computed in
-    // the function shadePixel.  Since the circle does not fill
-    // the bounding box entirely, not every pixel in the box will
-    // receive contribution.
     for (int pixelY = 0; pixelY < image->height; pixelY++) {
 
         // pointer to pixel data
@@ -157,14 +139,6 @@ RefRenderer::render() {
 
         for (int pixelX = 0; pixelX < image->width; pixelX++) {
 
-            // When "shading" the pixel ("shading" = computing the
-            // circle's color and opacity at the pixel), we treat
-            // the pixel as a point at the center of the pixel.
-            // We'll compute the color of the circle at this
-            // point.  Note that shading math will occur in the
-            // normalized [0,1]^2 coordinate space, so we convert
-            // the pixel center into this coordinate space prior
-            // to calling shadePixel.
             float pixelCenterNormX = invWidth * (static_cast<float>(pixelX) + 0.5f);
             float pixelCenterNormY = 1.0f - invHeight * (static_cast<float>(pixelY) + 0.5f);
             shadePixel(pixelCenterNormX, pixelCenterNormY, imgPtr, invProj, invView, camPos);

@@ -8,6 +8,9 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+#define GLM_FORCE_CUDA
+#include <glm/glm.hpp>
+
 #include "cudaRenderer.h"
 #include "image.h"
 #include "sceneLoader.h"
@@ -33,9 +36,11 @@ struct GlobalConstants {
 // place to put read-only variables).
 __constant__ GlobalConstants cuConstRendererParams;
 
-// kernelClearImage --  (CUDA device code)
-//
-// Clear the image, setting all pixels to the specified color rgba
+/// Clear the image, setting all pixels to the specified color rgba
+/// \param r Red color component (0-1 range)
+/// \param g Green color component (0-1 range)
+/// \param b Blue color component (0-1 range)
+/// \param a Alpha color component (0-1 range)
 __global__ void kernelClearImage(float r, float g, float b, float a) {
 
     int imageX = blockIdx.x * blockDim.x + threadIdx.x;
@@ -56,7 +61,7 @@ __global__ void kernelClearImage(float r, float g, float b, float a) {
     *(float4*)(&cuConstRendererParams.imageData[offset]) = value;
 }
 
-// shadePixel -- (CUDA device code)
+
 __device__ __inline__ void
 shadePixel(float2 pixelCenter, float4* imagePtr) {
     float4 ret;
@@ -69,8 +74,7 @@ shadePixel(float2 pixelCenter, float4* imagePtr) {
     *imagePtr = ret;
 }
 
-// kernelRenderCircles -- (CUDA device code)
-__global__ void kernelRenderCircles() {
+__global__ void kernelRender() {
 
     // TODO: Change solution to parallelize over pixels, instead of circles.
 
@@ -93,34 +97,19 @@ __global__ void kernelRenderCircles() {
 
 
 CudaRenderer::CudaRenderer() {
-    image = NULL;
-
-    numCircles = 0;
-    position = NULL;
-    velocity = NULL;
-    color = NULL;
-    radius = NULL;
-
-    cudaDevicePosition = NULL;
-    cudaDeviceVelocity = NULL;
-    cudaDeviceColor = NULL;
-    cudaDeviceRadius = NULL;
-    cudaDeviceImageData = NULL;
+    image = nullptr;
+    cudaDeviceImageData = nullptr;
 }
 
 CudaRenderer::~CudaRenderer() {
+    delete image;
 
-    if (image) {
-        delete image;
-    }
-
-    if (cudaDevicePosition) {
+    if (cudaDeviceImageData) {
         cudaFree(cudaDeviceImageData);
     }
 }
 
-const Image*
-CudaRenderer::getImage() {
+const Image* CudaRenderer::getImage() {
 
     // Need to copy contents of the rendered image from device memory
     // before we expose the Image object to the caller
@@ -135,14 +124,12 @@ CudaRenderer::getImage() {
     return image;
 }
 
-void
-CudaRenderer::loadScene(SceneName scene) {
-    sceneName = scene;
-    loadCircleScene(sceneName, numCircles, position, velocity, color, radius);
+void CudaRenderer::loadScene(SceneName name) {
+    sceneName = name;
+    scene = SceneLoader::loadScene(sceneName);
 }
 
-void
-CudaRenderer::setup() {
+void CudaRenderer::setup() {
 
     int deviceCount = 0;
     bool isFastGPU = false;
@@ -201,24 +188,16 @@ CudaRenderer::setup() {
     cudaMemcpyToSymbol(cuConstRendererParams, &params, sizeof(GlobalConstants));
 }
 
-// allocOutputImage --
-//
-// Allocate buffer the renderer will render into.  Check status of
-// image first to avoid memory leak.
-void
-CudaRenderer::allocOutputImage(int width, int height) {
 
-    if (image)
-        delete image;
+/// Allocate buffer the renderer will render into.
+void CudaRenderer::allocOutputImage(int width, int height) {
+    delete image;
     image = new Image(width, height);
 }
 
-// clearImage --
-//
-// Clear the renderer's target image.  The state of the image after
-// the clear depends on the scene being rendered.
-void
-CudaRenderer::clearImage() {
+/// Clear the renderer's target image.  The state of the image after
+/// the clear depends on the scene being rendered.
+void CudaRenderer::clearImage() {
 
     // 256 threads per block is a healthy number
     dim3 blockDim(16, 16, 1);
@@ -231,27 +210,21 @@ CudaRenderer::clearImage() {
     cudaDeviceSynchronize();
 }
 
-// advanceAnimation --
-//
-// Advance the simulation one time step.  Updates all circle positions
-// and velocities
-void
-CudaRenderer::advanceAnimation() {
-     // 256 threads per block is a healthy number
-    dim3 blockDim(256, 1);
-    dim3 gridDim((numCircles + blockDim.x - 1) / blockDim.x);
 
-    // TODO: advance frame code
-    //       move camera etc.
-    cudaDeviceSynchronize();
+void CudaRenderer::advanceAnimation() {
+//    dim3 blockDim(256, 1);
+//    dim3 gridDim((numCircles + blockDim.x - 1) / blockDim.x);
+//
+//    cudaDeviceSynchronize();
 }
 
-void
-CudaRenderer::render() {
+void CudaRenderer::render() {
     // 256 threads per block is a healthy number
-    dim3 blockDim(256, 1);
-    dim3 gridDim((numCircles + blockDim.x - 1) / blockDim.x);
+    dim3 blockDim(16, 16, 1);
+    dim3 gridDim(
+            (image->width + blockDim.x - 1) / blockDim.x,
+            (image->height + blockDim.y - 1) / blockDim.y);
 
-    kernelRenderCircles<<<gridDim, blockDim>>>();
+    kernelRender<<<gridDim, blockDim>>>();
     cudaDeviceSynchronize();
 }

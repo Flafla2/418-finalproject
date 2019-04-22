@@ -16,17 +16,31 @@ static float randomFloat() {
     return static_cast<float>(rand()) / RAND_MAX;
 }
 
-Scene *SceneLoader::loadScene(SceneName sceneName)
-{
+static std::vector<Primitive *> load_primitive_array(SceneName sceneName) {
     std::vector<Primitive *> prims;
     if (sceneName == TEST_SCENE) {
         prims.push_back(new Sphere(glm::vec3(-1.2f,0,0), 1.f));
         prims.push_back(new Sphere(glm::vec3( 1.2f,0,0), 1.f));
     } else {
         fprintf(stderr, "Error: cann't load scene (unknown scene)\n");
-        return nullptr;
     }
+    return prims;
+}
+
+#if WITH_CUDA
+CudaScene *SceneLoader::loadSceneCuda(SceneName sceneName)
+{
+    std::vector<Primitive *> prims = load_primitive_array(sceneName);
 
     printf("Loaded scene\n");
-    return new Scene(prims);
+    return new CudaScene(prims);
+}
+#endif
+
+RefScene *SceneLoader::loadSceneRef(SceneName sceneName)
+{
+    std::vector<Primitive *> prims = load_primitive_array(sceneName);
+
+    printf("Loaded scene\n");
+    return new RefScene(prims);
 }
