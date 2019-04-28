@@ -65,8 +65,8 @@ __global__ void kernelClearImage(float r, float g, float b, float a) {
 __device__ __inline__ void
 shadePixel(float2 pixelCenter, float4* imagePtr) {
     float4 ret;
-    ret.x = 1.0;
-    ret.y = 1.0;
+    ret.x = pixelCenter.x;
+    ret.y = pixelCenter.y;
     ret.z = 1.0;
     ret.w = 1.0;
 
@@ -75,8 +75,6 @@ shadePixel(float2 pixelCenter, float4* imagePtr) {
 }
 
 __global__ void kernelRender() {
-
-    // TODO: Change solution to parallelize over pixels, instead of circles.
 
     int pixelX = blockIdx.x * blockDim.x + threadIdx.x;
     int pixelY = blockIdx.y * blockDim.y + threadIdx.y;
@@ -126,7 +124,7 @@ const Image* CudaRenderer::getImage() {
 
 void CudaRenderer::loadScene(SceneName name) {
     sceneName = name;
-    scene = SceneLoader::loadScene(sceneName);
+    scene = SceneLoader::loadSceneCuda(sceneName);
 }
 
 void CudaRenderer::setup() {

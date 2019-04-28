@@ -25,5 +25,15 @@ public:
     float radius;
 };
 
+class Box : public Primitive {
+public:
+    explicit  Box(glm::vec3 center = glm::vec3(0,0,0), glm::vec3 dim) : center(center), dim(dim) {}
+
+    float sdf(glm::vec3 p) const override;
+
+    glm::vec3 center;
+    glm::vec3 dim;
+};
+
 
 #endif //RAYMARCHER_PRIMITIVE_H

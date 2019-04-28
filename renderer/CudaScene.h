@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "Primitive.h"
 #include "Scene.h"
 
 class CudaScene : public Scene {

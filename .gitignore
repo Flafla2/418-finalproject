@@ -8,5 +8,6 @@
 *.sublime-workspace
 build/
 xcode/
+.idea/
 
 .DS_Store

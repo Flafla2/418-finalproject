@@ -25,10 +25,12 @@ add_executable( raymarcher
   sceneLoader.cpp )
 target_link_libraries( raymarcher PUBLIC raymarcher-seq)
 
+# include GLM
+include_directories( include/ )
+
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
-find_package(GLM REQUIRED)
-include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} )
+include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
 
 target_link_libraries( raymarcher PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} )
 
