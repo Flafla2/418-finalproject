@@ -1,6 +1,6 @@
 #include "RefScene.h"
 
-RefScene::RefScene(std::vector<Primitive *> primitives) : primitives(primitives) { }
+RefScene::RefScene(std::vector<RefPrimitive *> primitives) : primitives(primitives) { }
 
 RefScene::~RefScene() { }
 

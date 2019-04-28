@@ -9,14 +9,14 @@
 #include <glm/glm.hpp>
 
 #include "renderer.h"
-#include "Scene.h"
+#include "CudaScene.h"
 
 class CudaRenderer : public Renderer {
 
 private:
     Image* image;
     SceneName sceneName;
-    Scene *scene;
+    CudaScene *scene;
 
     float* cudaDeviceImageData;
 
@@ -38,11 +38,6 @@ public:
     void advanceAnimation() override;
 
     void render() override;
-
-    void shadePixel(
-            float pixelCenterX, float pixelCenterY,
-            float* pixelData, glm::mat4x4 invProj,
-            glm::mat4x4 invView, glm::vec3 camPos);
 };
 
 #endif

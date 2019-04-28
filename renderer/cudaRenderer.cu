@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <vector>
+#include <ctime>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -63,18 +64,53 @@ __global__ void kernelClearImage(float r, float g, float b, float a) {
 
 
 __device__ __inline__ void
-shadePixel(float2 pixelCenter, float4* imagePtr) {
+shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
+           glm::mat4x4 invView, glm::vec3 camPos) {
+    // Inverse project to get point on near clip plane (in NDC, z = -1 corresponds to the
+    // near clip plane.  Also w = 1.0 in NDC)
+    glm::vec4 ptView  = invProj * glm::vec4(pixelCenter.x*2-1, pixelCenter.y*2-1, -1.f, 1.f);
+    // Apply homogenous coordinate from projection matrix
+    ptView /= ptView.w;
+    // Bring view space point into world space
+    glm::vec4 ptWorld = invView * ptView;
+
+    glm::vec3 ray = glm::normalize(glm::vec3(ptWorld) - camPos);
+
     float4 ret;
-    ret.x = pixelCenter.x;
-    ret.y = pixelCenter.y;
-    ret.z = 1.0;
-    ret.w = 1.0;
+    float t = 0.f;
+    for (int march = 0; march < 64; ++march) {
+
+        glm::vec3 p = camPos + ray * t;
+        float sdf = deviceSdf(p);
+
+        if (sdf < 0.01f) {
+            // hit something!
+            glm::vec3 normal = deviceNormal(p);
+            const float rt1_3 = 0.5773502692f;
+            float ndotl = glm::dot(normal, -glm::vec3(rt1_3,-rt1_3,rt1_3));
+
+            ret.x = ret.y = ret.z = ndotl;
+            ret.w = 1.0f;
+
+            break;
+        } else if (t > 10.0f) {
+            ret.x = (ray.x+1)/2;
+            ret.y = (ray.y+1)/2;
+            ret.z = (ray.z+1)/2;
+            ret.w = 1.0;
+
+            break;
+        } else {
+            t += sdf;
+        }
+
+    }
 
     // Global memory write
     *imagePtr = ret;
 }
 
-__global__ void kernelRender() {
+__global__ void kernelRender(glm::mat4x4 invProj, glm::mat4x4 invView, glm::vec3 camPos) {
 
     int pixelX = blockIdx.x * blockDim.x + threadIdx.x;
     int pixelY = blockIdx.y * blockDim.y + threadIdx.y;
@@ -88,7 +124,7 @@ __global__ void kernelRender() {
     float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pixelY * imageWidth + pixelX)]);
     float2 pixelCenterNorm = make_float2(invWidth * (static_cast<float>(pixelX) + 0.5f),
                                          invHeight * (static_cast<float>(pixelY) + 0.5f));
-    shadePixel(pixelCenterNorm, imgPtr);
+    shadePixel(pixelCenterNorm, imgPtr, invProj, invView, camPos);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -184,6 +220,8 @@ void CudaRenderer::setup() {
     params.imageData = cudaDeviceImageData;
 
     cudaMemcpyToSymbol(cuConstRendererParams, &params, sizeof(GlobalConstants));
+
+    scene->initCudaData();
 }
 
 
@@ -223,6 +261,20 @@ void CudaRenderer::render() {
             (image->width + blockDim.x - 1) / blockDim.x,
             (image->height + blockDim.y - 1) / blockDim.y);
 
-    kernelRender<<<gridDim, blockDim>>>();
+    static std::clock_t begin = clock();
+    std::clock_t cur = clock();
+
+    double elapsed_secs = double(cur - begin) / CLOCKS_PER_SEC;
+
+    glm::vec3 camPos(glm::sin(elapsed_secs) * 5.0f, 0.f, glm::cos(elapsed_secs) * 5.0f);
+    glm::vec3 camLook(0.f, 0.f, 0.f);
+    glm::vec3 camUp(0.f, 1.f, 0.f);
+
+    static float aspect = float(image->width) / image->height;
+
+    glm::mat4x4 invView = glm::inverse(glm::lookAt(camPos, camLook, camUp));
+    glm::mat4x4 invProj = glm::inverse(glm::perspective(30.0f, aspect, 0.3f, 200.0f));
+
+    kernelRender<<<gridDim, blockDim>>>(invProj, invView, camPos);
     cudaDeviceSynchronize();
 }

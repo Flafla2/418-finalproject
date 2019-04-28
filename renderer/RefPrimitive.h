@@ -1,10 +1,10 @@
 
-#ifndef RAYMARCHER_PRIMITIVE_H
-#define RAYMARCHER_PRIMITIVE_H
+#ifndef RAYMARCHER_REFPRIMITIVE_H
+#define RAYMARCHER_REFPRIMITIVE_H
 
 #include <glm/vec3.hpp>
 
-class Primitive {
+class RefPrimitive {
 public:
     /// Evaluates a Signed Distance field for this primitive.
     /// \param p Point to evaluate SDF at
@@ -14,7 +14,7 @@ public:
     virtual float sdf(glm::vec3 p) const = 0;
 };
 
-class Sphere : public Primitive {
+class RefSphere : public RefPrimitive {
 public:
     explicit Sphere(glm::vec3 center = glm::vec3(0,0,0), float radius = 1.f) :
         center(center), radius(radius) {}
@@ -25,9 +25,9 @@ public:
     float radius;
 };
 
-class Box : public Primitive {
+class RefBox : public RefPrimitive {
 public:
-    explicit  Box(glm::vec3 center = glm::vec3(0,0,0), glm::vec3 dim) : center(center), dim(dim) {}
+    explicit  Box(glm::vec3 center = glm::vec3(0,0,0), glm::vec3 dim = glm::vec3(1,1,1)) : center(center), dim(dim) {}
 
     float sdf(glm::vec3 p) const override;
 
@@ -36,4 +36,4 @@ public:
 };
 
 
-#endif //RAYMARCHER_PRIMITIVE_H
+#endif //RAYMARCHER_REFPRIMITIVE_H

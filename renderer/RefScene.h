@@ -1,17 +1,17 @@
 #ifndef RAYMARCHER_REFSCENE_H
 #define RAYMARCHER_REFSCENE_H
 
-#include "Primitive.h"
+#include "RefPrimitive.h"
 #include "Scene.h"
 
 class RefScene : public Scene {
 public:
-    explicit RefScene(std::vector<Primitive *> primitives);
+    explicit RefScene(std::vector<RefPrimitive *> primitives);
     ~RefScene();
 
     float sdf(glm::vec3 p) override;
 private:
-    std::vector<Primitive *> primitives;
+    std::vector<RefPrimitive *> primitives;
 };
 
 

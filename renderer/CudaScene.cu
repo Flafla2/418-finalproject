@@ -1,6 +1,8 @@
 #include "CudaScene.h"
 
-CudaScene::CudaScene(std::vector<Primitive *> primitives) {
+#include <iostream>
+
+CudaScene::CudaScene(std::vector<RefPrimitive *> primitives) {
     for ( auto & p : primitives ) {
         Sphere *s = dynamic_cast<Sphere *>(p);
         if (s) {
@@ -11,6 +13,13 @@ CudaScene::CudaScene(std::vector<Primitive *> primitives) {
 
 CudaScene::~CudaScene() = default;
 
+struct SceneConstants {
+    CudaSphere *sphereData;
+    int nSphere;
+};
+
+__constant__ SceneConstants cudaConstSceneParams;
+
 float CudaScene::sdf(glm::vec3 p) {
     float ret = std::numeric_limits<float>::infinity();
 
@@ -19,4 +28,46 @@ float CudaScene::sdf(glm::vec3 p) {
     }
 
     return ret;
+}
+
+__device__ float deviceSdf(glm::vec3 p) {
+    float ret = 1000000.0f;
+    for (int i = 0; i < cudaConstSceneParams.nSphere; ++i) {
+        float sdf = cudaConstSceneParams.sphereData[i].sdf(p);
+        ret = glm::min(sdf, ret);
+    }
+    return ret;
+}
+
+__device__ glm::vec3 deviceNormal(glm::vec3 p) {
+    static const float eps = 0.001f;
+    static const glm::vec3 x = glm::vec3(eps, 0, 0);
+    static const glm::vec3 y = glm::vec3(0, eps, 0);
+    static const glm::vec3 z = glm::vec3(0, 0, eps);
+
+    glm::vec3 ret(
+            deviceSdf(p + x) - deviceSdf(p - x),
+            deviceSdf(p + y) - deviceSdf(p - y),
+            deviceSdf(p + z) - deviceSdf(p - z)
+    );
+    return glm::normalize(ret);
+}
+
+void CudaScene::initCudaData() {
+    static bool cudaDataInitialized = false;
+    if (cudaDataInitialized) {
+        std::cerr << "ERROR: Scene Cuda data already initialized!  Exiting." << std::endl;
+        exit(1);
+    }
+    cudaDataInitialized = true;
+
+    size_t const sphereSize = sizeof(Sphere) * spheres.size();
+    cudaMalloc(&cudaDeviceSphereData, sphereSize);
+    cudaMemcpy(cudaDeviceSphereData, spheres.data(), sphereSize, cudaMemcpyHostToDevice);
+
+    SceneConstants params;
+    params.sphereData = cudaDeviceSphereData;
+    params.nSphere = spheres.size();
+
+    cudaMemcpyToSymbol(cudaConstSceneParams, &params, sizeof(SceneConstants));
 }
