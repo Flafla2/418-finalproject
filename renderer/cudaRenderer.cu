@@ -83,6 +83,8 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
 
     glm::vec3 ray = glm::normalize(glm::vec3(ptWorld) - camPos);
 
+    printf("Marco!\n");
+
     float t = 0.f;
     int march;
     for (march = 0; march < MAX_STEPS; ++march) {
