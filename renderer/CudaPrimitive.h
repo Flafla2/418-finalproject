@@ -38,5 +38,52 @@ public:
     glm::vec3 dim;
 };
 
+class CudaTorus : public CudaPrimitive {
+public:
+    explicit Torus(glm::vec3 center = glm::vec3(0,0,0), glm::vec3 t = glm::vec3(1,1,1) : center(center), t(t)){}
+
+    __device__ __host__
+    float sdf(glm::vec3 p) const override;
+
+    glm::vec3 center;
+    glm::vec3 t;
+};
+
+class CudaCylinder : public CudaPrimitive {
+public:
+    explicit Cylinder(glm::vec3 center = glm::vec3(0,0,0), glm::vec3 dim = glm::vec3(1,1,1) : center(center), dim(dim)) {}
+
+    __device__ __host__
+    float sdf(glm::vec3 p) const override;
+
+    glm::vec3 center;
+    glm::vec3 t;
+
+};
+
+class CudaCone : public CudaCone {
+public:
+    explicit Cone(glm::vec3 center = glm::vec3(0,0,0), glm::vec2 dim = glm::vec2(1,1) : center(center), dim(dim)) {}
+
+    __device__ __host__
+    float sdf(glm::vec3 p) const override;
+
+    glm::vec3 center;
+    glm::vec2 dim;
+};
+
+class CudaPlane : public CudaPrimitive {
+public:
+    explicit Plane(glm::vec3 center = glm::vec3(0,0,0), glm::vec4 dim = glm::vec4(1,1,1,1) : center(center), dim(dim))
+
+    __device__ __host__
+    float sdf(glm::vec3 p) const override;
+
+    glm::vec3 center;
+    glm::vec4 dim;
+};
+
+
+
 
 #endif //RAYMARCHER_CUDAPRIMITIVE_H
