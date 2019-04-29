@@ -5,12 +5,12 @@
 
 #include "RefScene.h"
 
-#if WITH_CUDA && defined(__CUDACC__)
+#if WITH_CUDA
 #include "CudaScene.h"
 #endif
 
 namespace SceneLoader {
-#if WITH_CUDA && defined(__CUDACC__)
+#if WITH_CUDA
     CudaScene *loadSceneCuda(SceneName sceneName);
 #endif
     RefScene *loadSceneRef(SceneName sceneName);

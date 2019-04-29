@@ -2,8 +2,13 @@
 #ifndef RAYMARCHER_CUDAPRIMITIVE_H
 #define RAYMARCHER_CUDAPRIMITIVE_H
 
+#if defined(__CUDACC__)
 #include <cuda.h>
 #include <cuda_runtime.h>
+#else
+#define __device__
+#define __host__
+#endif
 
 #define GLM_FORCE_CUDA
 #include <glm/vec3.hpp>
