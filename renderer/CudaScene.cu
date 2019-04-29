@@ -36,10 +36,10 @@ __device__ float deviceSdf(glm::vec3 p) {
 }
 
 __device__ glm::vec3 deviceNormal(glm::vec3 p) {
-    static const float eps = 0.001f;
-    static const glm::vec3 x = glm::vec3(eps, 0, 0);
-    static const glm::vec3 y = glm::vec3(0, eps, 0);
-    static const glm::vec3 z = glm::vec3(0, 0, eps);
+    const float eps = 0.001f;
+    const glm::vec3 x = glm::vec3(eps, 0, 0);
+    const glm::vec3 y = glm::vec3(0, eps, 0);
+    const glm::vec3 z = glm::vec3(0, 0, eps);
 
     glm::vec3 ret(
             deviceSdf(p + x) - deviceSdf(p - x),
