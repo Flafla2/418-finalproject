@@ -2,6 +2,9 @@
 #ifndef RAYMARCHER_CUDAPRIMITIVE_H
 #define RAYMARCHER_CUDAPRIMITIVE_H
 
+#include <cuda.h>
+#include <cuda_runtime.h>
+
 #define GLM_FORCE_CUDA
 #include <glm/vec3.hpp>
 

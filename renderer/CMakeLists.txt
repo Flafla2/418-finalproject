@@ -47,7 +47,7 @@ if(CMAKE_CUDA_COMPILER)
   add_library( raymarcher-cuda STATIC cudaRenderer.h cudaRenderer.cu CudaScene.cu CudaScene.h CudaPrimitive.cu CudaPrimitive.h)
   set_property(TARGET raymarcher-cuda
           PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-    
+
   target_link_libraries( raymarcher-cuda PUBLIC raymarcher-common )
   target_link_libraries( raymarcher PUBLIC raymarcher-cuda )
 
