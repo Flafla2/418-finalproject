@@ -8,7 +8,9 @@
 #define GLM_FORCE_CUDA
 #include <glm/glm.hpp>
 
+#define DEBUG
 #include "cuda_error.h"
+#include "cuda_constants.h"
 
 CudaScene::CudaScene(std::vector<CudaPrimitive *> primitives) {
     for ( auto & p : primitives ) {
@@ -20,15 +22,6 @@ CudaScene::CudaScene(std::vector<CudaPrimitive *> primitives) {
 }
 
 CudaScene::~CudaScene() = default;
-
-struct SceneConstants {
-    CudaSphere *sphereData;
-    int nSphere;
-};
-
-// https://stackoverflow.com/questions/22348676/usage-of-same-constant-memory-array-on-different-source-files
-// Need to use extern because CudaScene.cu is a separate compilation unit from cudaRenderer.cu
-extern __constant__ SceneConstants cudaConstSceneParams;
 
 __device__ float deviceSdf(glm::vec3 p) {
     float ret = 1000000.0f;

@@ -23,26 +23,14 @@
 
 #define DEBUG
 #include "cuda_error.h"
+#include "cuda_constants.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // All cuda kernels here
 ///////////////////////////////////////////////////////////////////////////////////////
 
-struct GlobalConstants {
-    SceneName sceneName;
 
-    int imageWidth;
-    int imageHeight;
-    float* imageData;
-};
-
-// Global variable that is in scope, but read-only, for all cuda
-// kernels.  The __constant__ modifier designates this variable will
-// be stored in special "constant" memory on the GPU. (we didn't talk
-// about this type of memory in class, but constant memory is a fast
-// place to put read-only variables).
-__constant__ GlobalConstants cuConstRendererParams;
 
 /// Clear the image, setting all pixels to the specified color rgba
 /// \param r Red color component (0-1 range)
