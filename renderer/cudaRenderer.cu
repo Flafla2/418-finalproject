@@ -88,7 +88,7 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
     ret.w = 1.0;
     *imagePtr = ret;
     return;
-    
+
     float t = 0.f;
     int march;
     for (march = 0; march < MAX_STEPS; ++march) {
@@ -286,6 +286,7 @@ void CudaRenderer::render() {
     std::clock_t cur = clock();
 
     double elapsed_secs = double(cur - begin) / CLOCKS_PER_SEC;
+    printf("Time elapsed: %d", elapsed_secs);
 
     glm::vec3 camPos(glm::sin(elapsed_secs) * 5.0f, 0.f, glm::cos(elapsed_secs) * 5.0f);
     glm::vec3 camLook(0.f, 0.f, 0.f);
