@@ -1,4 +1,6 @@
 
+#include "renderer.h"
+
 #ifndef __CUDA_CONSTANTS_STRUCTS__
 #define __CUDA_CONSTANTS_STRUCTS__
 struct GlobalConstants {
