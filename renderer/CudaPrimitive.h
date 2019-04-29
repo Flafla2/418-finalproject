@@ -6,9 +6,6 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #define GLM_FORCE_CUDA
-#else
-#define __device__
-#define __host__
 #endif
 
 #include <glm/vec3.hpp>
