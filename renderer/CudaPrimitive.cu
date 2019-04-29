@@ -1,3 +1,4 @@
+#define GLM_FORCE_CUDA
 #include <glm/geometric.hpp>
 
 #include "CudaPrimitive.h"
