@@ -8,6 +8,8 @@
 
 __device__ __host__
 float CudaSphere::sdf(glm::vec3 p) const {
+    printf("CudaSphere sdf called.  p: (%f, %f, %f), center: (%f, %f, %f) radius: %f\n",
+            p.x, p.y, p.z, center.x, center.y, center.z, radius);
     return glm::distance(p, center) - radius;
 }
 
