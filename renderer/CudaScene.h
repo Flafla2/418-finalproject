@@ -1,6 +1,8 @@
 #ifndef RAYMARCHER_CUDASCENE_H
 #define RAYMARCHER_CUDASCENE_H
 
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include <vector>
 
 #include "CudaPrimitive.h"

@@ -5,12 +5,12 @@
 #if defined(__CUDACC__)
 #include <cuda.h>
 #include <cuda_runtime.h>
+#define GLM_FORCE_CUDA
 #else
 #define __device__
 #define __host__
 #endif
 
-#define GLM_FORCE_CUDA
 #include <glm/vec3.hpp>
 
 class CudaPrimitive {
