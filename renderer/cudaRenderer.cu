@@ -75,7 +75,7 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
     ret.y = pixelCenter.y;
     ret.z = 0.0f;
     ret.w = 1.0f;
-    *imgPtr = ret;
+    *imagePtr = ret;
     return;
     // Inverse project to get point on near clip plane (in NDC, z = -1 corresponds to the
     // near clip plane.  Also w = 1.0 in NDC)
