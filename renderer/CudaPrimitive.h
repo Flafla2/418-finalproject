@@ -63,7 +63,7 @@ public:
 
 class CudaCone : public CudaCone {
 public:
-    explicit Cone(glm::vec3 center = glm::vec3(0,0,0), glm::vec2 dim = glm::vec2(1,1) : center(center), dim(dim)) {}
+    c
 
     __device__ __host__
     float sdf(glm::vec3 p) const override;

@@ -28,7 +28,6 @@ float CudaCylinder::sdf(glm::vec3 p) const{
 
 __device__ __host__
 float CudaCone::sdf(glm::vec3 p) const{
-
     float q = glm::length(p.xy);
     return glm::dot(dim, glm::vec2(q, center.z));
 }
