@@ -57,7 +57,7 @@ void CudaScene::initCudaData() {
     }
     cudaDataInitialized = true;
 
-    size_t const sphereSize = sizeof(Sphere) * spheres.size();
+    size_t const sphereSize = sizeof(CudaSphere) * spheres.size();
     cudaMalloc(&cudaDeviceSphereData, sphereSize);
     cudaMemcpy(cudaDeviceSphereData, spheres.data(), sphereSize, cudaMemcpyHostToDevice);
 
