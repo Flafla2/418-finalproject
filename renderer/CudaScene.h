@@ -14,7 +14,7 @@ public:
 private:
     std::vector<CudaSphere> spheres;
 
-    Sphere *cudaDeviceSphereData;
+    CudaSphere *cudaDeviceSphereData;
 };
 
 __device__ float deviceSdf(glm::vec3 p);
