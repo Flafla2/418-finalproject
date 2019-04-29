@@ -19,6 +19,7 @@
 #include "image.h"
 #include "sceneLoader.h"
 #include "util.h"
+#include "cycleTimer.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -282,10 +283,10 @@ void CudaRenderer::render() {
             (image->width + blockDim.x - 1) / blockDim.x,
             (image->height + blockDim.y - 1) / blockDim.y);
 
-    static std::clock_t begin = clock();
-    std::clock_t cur = clock();
+    static double begin = CycleTimer::currentSeconds();
+    double cur = CycleTimer::currentSeconds();
 
-    double elapsed_secs = double(cur - begin) / CLOCKS_PER_SEC;
+    double elapsed_secs = cur - begin;
     printf("Time elapsed: %f\n", elapsed_secs);
 
     glm::vec3 camPos(glm::sin(elapsed_secs) * 5.0f, 0.f, glm::cos(elapsed_secs) * 5.0f);
