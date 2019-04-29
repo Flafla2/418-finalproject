@@ -26,7 +26,9 @@ struct SceneConstants {
     int nSphere;
 };
 
-__constant__ SceneConstants cudaConstSceneParams;
+// https://stackoverflow.com/questions/22348676/usage-of-same-constant-memory-array-on-different-source-files
+// Need to use extern because CudaScene.cu is a separate compilation unit from cudaRenderer.cu
+extern __constant__ SceneConstants cudaConstSceneParams;
 
 __device__ float deviceSdf(glm::vec3 p) {
     float ret = 1000000.0f;
