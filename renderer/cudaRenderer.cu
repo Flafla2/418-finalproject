@@ -71,6 +71,12 @@ __device__ __inline__ void
 shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
            glm::mat4x4 invView, glm::vec3 camPos) {
     float4 ret;
+    ret.x = (ray.x+1)/2;
+    ret.y = (ray.y+1)/2;
+    ret.z = (ray.z+1)/2;
+    ret.w = 1.0;
+    *imagePtr = ret;
+    return;
     // Inverse project to get point on near clip plane (in NDC, z = -1 corresponds to the
     // near clip plane.  Also w = 1.0 in NDC)
     glm::vec4 ptView  = invProj * glm::vec4(pixelCenter.x*2-1, pixelCenter.y*2-1, -1.f, 1.f);
