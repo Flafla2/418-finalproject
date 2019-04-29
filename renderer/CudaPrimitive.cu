@@ -1,6 +1,8 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
+#include <stdio.h>
+
 #define GLM_FORCE_CUDA
 #include <glm/geometric.hpp>
 
