@@ -2,7 +2,7 @@
 #define __REF_RENDERER_H__
 
 #include "renderer.h"
-#include "Scene.h"
+#include "RefScene.h"
 
 class RefRenderer : public Renderer {
 
@@ -10,7 +10,7 @@ private:
 
     Image* image;
     SceneName sceneName;
-    Scene *scene;
+    RefScene *scene;
 
 public:
 

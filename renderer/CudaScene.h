@@ -4,14 +4,11 @@
 #include <vector>
 
 #include "CudaPrimitive.h"
-#include "Scene.h"
 
-class CudaScene : public Scene {
+class CudaScene {
 public:
     explicit CudaScene(std::vector<CudaPrimitive *> primitives);
     ~CudaScene();
-
-    float sdf(glm::vec3 p) override;
 
     void initCudaData();
 private:

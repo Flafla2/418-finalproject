@@ -20,16 +20,6 @@ struct SceneConstants {
 
 __constant__ SceneConstants cudaConstSceneParams;
 
-float CudaScene::sdf(glm::vec3 p) {
-    float ret = std::numeric_limits<float>::infinity();
-
-    for (auto & s : spheres) {
-        ret = std::min(s.sdf(p), ret);
-    }
-
-    return ret;
-}
-
 __device__ float deviceSdf(glm::vec3 p) {
     float ret = 1000000.0f;
     for (int i = 0; i < cudaConstSceneParams.nSphere; ++i) {

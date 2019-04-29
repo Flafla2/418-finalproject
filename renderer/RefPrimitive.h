@@ -16,7 +16,7 @@ public:
 
 class RefSphere : public RefPrimitive {
 public:
-    explicit Sphere(glm::vec3 center = glm::vec3(0,0,0), float radius = 1.f) :
+    explicit RefSphere(glm::vec3 center = glm::vec3(0,0,0), float radius = 1.f) :
         center(center), radius(radius) {}
 
     float sdf(glm::vec3 p) const override;
@@ -27,7 +27,7 @@ public:
 
 class RefBox : public RefPrimitive {
 public:
-    explicit  Box(glm::vec3 center = glm::vec3(0,0,0), glm::vec3 dim = glm::vec3(1,1,1)) : center(center), dim(dim) {}
+    explicit RefBox(glm::vec3 center = glm::vec3(0,0,0), glm::vec3 dim = glm::vec3(1,1,1)) : center(center), dim(dim) {}
 
     float sdf(glm::vec3 p) const override;
 

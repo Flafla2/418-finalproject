@@ -7,7 +7,7 @@ project(Raymarcher 	VERSION 0.1
 include(CheckLanguage)
 
 add_library( raymarcher-common INTERFACE )
-target_sources( raymarcher-common INTERFACE renderer.h cycleTimer.h util.h sceneLoader.h image.h Scene.cpp Scene.h )
+target_sources( raymarcher-common INTERFACE renderer.h cycleTimer.h util.h sceneLoader.h image.h )
 
 add_library( raymarcher-seq STATIC refRenderer.h refRenderer.cpp RefScene.cpp RefScene.h RefPrimitive.cpp RefPrimitive.h)
 target_link_libraries( raymarcher-seq PUBLIC raymarcher-common )
@@ -23,7 +23,7 @@ add_executable( raymarcher
   ppm.h
   ppm.cpp
   sceneLoader.cpp )
-target_link_libraries( raymarcher PUBLIC raymarcher-seq)
+target_link_libraries( raymarcher PUBLIC raymarcher-seq )
 
 # include GLM
 include_directories( include/ )
