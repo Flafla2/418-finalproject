@@ -8,6 +8,8 @@
 #define GLM_FORCE_CUDA
 #include <glm/glm.hpp>
 
+#include "cuda_error.h"
+
 CudaScene::CudaScene(std::vector<CudaPrimitive *> primitives) {
     for ( auto & p : primitives ) {
         CudaSphere *s = dynamic_cast<CudaSphere *>(p);
@@ -58,12 +60,18 @@ void CudaScene::initCudaData() {
     cudaDataInitialized = true;
 
     size_t const sphereSize = sizeof(CudaSphere) * spheres.size();
-    cudaMalloc(&cudaDeviceSphereData, sphereSize);
-    cudaMemcpy(cudaDeviceSphereData, spheres.data(), sphereSize, cudaMemcpyHostToDevice);
+    cudaCheckError(
+        cudaMalloc(&cudaDeviceSphereData, sphereSize)
+    );
+    cudaCheckError(
+        cudaMemcpy(cudaDeviceSphereData, spheres.data(), sphereSize, cudaMemcpyHostToDevice)
+    );
 
     SceneConstants params;
     params.sphereData = cudaDeviceSphereData;
     params.nSphere = spheres.size();
 
-    cudaMemcpyToSymbol(cudaConstSceneParams, &params, sizeof(SceneConstants));
+    cudaCheckError(
+        cudaMemcpyToSymbol(cudaConstSceneParams, &params, sizeof(SceneConstants))
+    );
 }

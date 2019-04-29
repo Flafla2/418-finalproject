@@ -21,6 +21,9 @@
 #include "util.h"
 #include "cycleTimer.h"
 
+#define DEBUG
+#include "cuda_error.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // All cuda kernels here
@@ -169,10 +172,10 @@ const Image* CudaRenderer::getImage() {
 
     printf("Copying image data from device\n");
 
-    cudaMemcpy(image->data,
+    cudaCheckError( cudaMemcpy(image->data,
                cudaDeviceImageData,
                sizeof(float) * 4 * image->width * image->height,
-               cudaMemcpyDeviceToHost);
+               cudaMemcpyDeviceToHost) );
 
     return image;
 }
@@ -222,7 +225,9 @@ void CudaRenderer::setup() {
     //
     // See the CUDA Programmer's Guide for descriptions of
     // cudaMalloc and cudaMemcpy
-    cudaMalloc(&cudaDeviceImageData, sizeof(float) * 4 * image->width * image->height);
+    cudaCheckError(
+        cudaMalloc(&cudaDeviceImageData, sizeof(float) * 4 * image->width * image->height)
+    );
 
     // Initialize parameters in constant memory.  We didn't talk about
     // constant memory in class, but the use of read-only constant
@@ -238,7 +243,9 @@ void CudaRenderer::setup() {
     params.imageHeight = image->height;
     params.imageData = cudaDeviceImageData;
 
-    cudaMemcpyToSymbol(cuConstRendererParams, &params, sizeof(GlobalConstants));
+    cudaCheckError(
+        cudaMemcpyToSymbol(cuConstRendererParams, &params, sizeof(GlobalConstants))
+    );
 
     scene->initCudaData();
 }
@@ -261,8 +268,9 @@ void CudaRenderer::clearImage() {
         (image->height + blockDim.y - 1) / blockDim.y);
 
     kernelClearImage<<<gridDim, blockDim>>>(1.f, 1.f, 1.f, 1.f);
-    
-    cudaDeviceSynchronize();
+    cudaCheckError(
+        cudaDeviceSynchronize()
+    );
 }
 
 
@@ -296,5 +304,7 @@ void CudaRenderer::render() {
     glm::mat4x4 invProj = glm::inverse(glm::perspective(30.0f, aspect, 0.3f, 200.0f));
 
     kernelRender<<<gridDim, blockDim>>>(invProj, invView, camPos);
-    cudaDeviceSynchronize();
+    cudaCheckError(
+        cudaDeviceSynchronize()
+    );
 }
