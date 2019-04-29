@@ -101,7 +101,7 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
             glm::vec3 normal = deviceNormal(p);
             const float rt1_3 = 0.5773502692f;
             float ndotl = glm::dot(normal, -glm::vec3(rt1_3,-rt1_3,rt1_3));
-            printf("Hit.  Center: (%d, %d) P: (%d, %d, %d) Normal: (%d, %d, %d)", pixelCenter.x, pixelCenter.y, p.x, p.y, p.z, normal.x, normal.y, normal.z);
+            printf("Hit.  Center: (%f, %f) P: (%f, %f, %f) Normal: (%f, %f, %f)", pixelCenter.x, pixelCenter.y, p.x, p.y, p.z, normal.x, normal.y, normal.z);
 
             ret.x = ret.y = ret.z = ndotl;
             ret.w = 1.0f;
@@ -286,7 +286,7 @@ void CudaRenderer::render() {
     std::clock_t cur = clock();
 
     double elapsed_secs = double(cur - begin) / CLOCKS_PER_SEC;
-    printf("Time elapsed: %d", elapsed_secs);
+    printf("Time elapsed: %f\n", elapsed_secs);
 
     glm::vec3 camPos(glm::sin(elapsed_secs) * 5.0f, 0.f, glm::cos(elapsed_secs) * 5.0f);
     glm::vec3 camLook(0.f, 0.f, 0.f);
