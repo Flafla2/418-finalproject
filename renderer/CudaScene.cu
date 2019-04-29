@@ -2,9 +2,9 @@
 
 #include <iostream>
 
-CudaScene::CudaScene(std::vector<RefPrimitive *> primitives) {
+CudaScene::CudaScene(std::vector<CudaPrimitive *> primitives) {
     for ( auto & p : primitives ) {
-        Sphere *s = dynamic_cast<Sphere *>(p);
+        CudaSphere *s = dynamic_cast<CudaSphere *>(p);
         if (s) {
             spheres.push_back(*s);
         }
