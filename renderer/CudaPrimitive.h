@@ -2,6 +2,7 @@
 #ifndef RAYMARCHER_CUDAPRIMITIVE_H
 #define RAYMARCHER_CUDAPRIMITIVE_H
 
+#define GLM_FORCE_CUDA
 #include <glm/vec3.hpp>
 
 class CudaPrimitive {

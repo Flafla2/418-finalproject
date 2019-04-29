@@ -1,6 +1,6 @@
 #include <glm/geometric.hpp>
 
-#include "RefPrimitive.h"
+#include "CudaPrimitive.h"
 
 __device__ __host__
 float CudaSphere::sdf(glm::vec3 p) const {
