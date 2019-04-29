@@ -65,10 +65,12 @@ __global__ void kernelClearImage(float r, float g, float b, float a) {
     *(float4*)(&cuConstRendererParams.imageData[offset]) = value;
 }
 
+#define MAX_STEPS 64
 
 __device__ __inline__ void
 shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
            glm::mat4x4 invView, glm::vec3 camPos) {
+    return float4(pixelCenter.x, pixelCenter.y, 0, 1);
     // Inverse project to get point on near clip plane (in NDC, z = -1 corresponds to the
     // near clip plane.  Also w = 1.0 in NDC)
     glm::vec4 ptView  = invProj * glm::vec4(pixelCenter.x*2-1, pixelCenter.y*2-1, -1.f, 1.f);
@@ -79,9 +81,10 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
 
     glm::vec3 ray = glm::normalize(glm::vec3(ptWorld) - camPos);
 
-    float4 ret;
+    float4 ret(0,0,0,0);
     float t = 0.f;
-    for (int march = 0; march < 64; ++march) {
+    int march;
+    for (march = 0; march < MAX_STEPS; ++march) {
 
         glm::vec3 p = camPos + ray * t;
         float sdf = deviceSdf(p);
@@ -107,6 +110,13 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
             t += sdf;
         }
 
+    }
+
+    if (march >= MAX_STEPS) {
+        ret.x = (ray.x+1)/2;
+        ret.y = (ray.y+1)/2;
+        ret.z = (ray.z+1)/2;
+        ret.w = 1.0;
     }
 
     // Global memory write
