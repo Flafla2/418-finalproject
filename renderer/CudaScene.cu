@@ -32,7 +32,7 @@ CudaScene::~CudaScene() = default;
 __device__ float deviceSdf(glm::vec3 p) {
     float ret = 1000000.0f;
     for (int i = 0; i < cudaConstSceneParams.nSphere; ++i) {
-        float sdf = cudaConstSceneParams.sphereData[i].sdf(p);
+        float sdf = SphereSDF(cudaConstSceneParams.sphereData[i], p);
         ret = glm::min(sdf, ret);
     }
     return ret;
