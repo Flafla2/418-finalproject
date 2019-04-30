@@ -88,7 +88,6 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
             glm::vec3 normal = deviceNormal(p);
             const float rt1_3 = 0.5773502692f;
             float ndotl = glm::dot(normal, -glm::vec3(rt1_3,-rt1_3,rt1_3));
-            printf("Hit.  Center: (%f, %f) P: (%f, %f, %f) Normal: (%f, %f, %f)\n", pixelCenter.x, pixelCenter.y, p.x, p.y, p.z, normal.x, normal.y, normal.z);
 
             ret.x = ret.y = ret.z = ndotl;
             ret.w = 1.0f;
