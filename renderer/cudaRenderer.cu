@@ -81,7 +81,7 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
     for (march = 0; march < MAX_STEPS; ++march) {
 
         glm::vec3 p = camPos + ray * t;
-        float sdf = 1.0f;//deviceSdf(p);
+        float sdf = deviceSdf(p);
 
         if (sdf < 0.01f) {
             // hit something!
