@@ -19,16 +19,16 @@ static float randomFloat() {
 #if WITH_CUDA
 CudaScene *SceneLoader::loadSceneCuda(SceneName sceneName)
 {
-    std::vector<CudaPrimitive *> prims;
+    std::vector<CudaSphere> spheres;
     if (sceneName == TEST_SCENE) {
-        prims.push_back(new CudaSphere(glm::vec3(-1.2f,0,0), 1.f));
-        prims.push_back(new CudaSphere(glm::vec3( 1.2f,0,0), 1.f));
+        spheres.push_back(CudaSphere(glm::vec3(-1.2f,0,0), 1.f));
+        spheres.push_back(CudaSphere(glm::vec3( 1.2f,0,0), 1.f));
     } else {
         fprintf(stderr, "Error: cann't load scene (unknown scene)\n");
     }
 
     printf("Loaded scene\n");
-    return new CudaScene(prims);
+    return new CudaScene(spheres);
 }
 #endif
 

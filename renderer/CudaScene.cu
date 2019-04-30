@@ -18,16 +18,8 @@
 extern __constant__ GlobalConstants cuConstRendererParams;
 extern __constant__ SceneConstants cudaConstSceneParams;
 
-CudaScene::CudaScene(std::vector<CudaPrimitive *> primitives) {
-    for ( CudaPrimitive *p : primitives ) {
-        CudaSphere *s = dynamic_cast<CudaSphere *>(p);
-        if (s) {
-            spheres.push_back(*s);
-            continue;
-        }
-
-        std::cerr << "Error: unable to recognize primitive" << std::endl;
-    }
+CudaScene::CudaScene(std::vector<CudaSphere> spheres) {
+    this->spheres = spheres; // deep copy
 }
 
 CudaScene::~CudaScene() = default;

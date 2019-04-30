@@ -13,7 +13,7 @@
 
 class CudaScene {
 public:
-    explicit CudaScene(std::vector<CudaPrimitive *> primitives);
+    explicit CudaScene(std::vector<CudaSphere> spheres);
     ~CudaScene();
 
     void initCudaData();
