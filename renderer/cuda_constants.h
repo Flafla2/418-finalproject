@@ -1,8 +1,8 @@
+#ifndef __CUDA_CONSTANTS_STRUCTS__
+#define __CUDA_CONSTANTS_STRUCTS__
 
 #include "renderer.h"
 
-#ifndef __CUDA_CONSTANTS_STRUCTS__
-#define __CUDA_CONSTANTS_STRUCTS__
 struct GlobalConstants {
     SceneName sceneName;
 
@@ -15,15 +15,19 @@ struct SceneConstants {
     CudaSphere *sphereData;
     int nSphere;
 };
-#endif
 
-// Global variable that is in scope, but read-only, for all cuda
-// kernels.  The __constant__ modifier designates this variable will
-// be stored in special "constant" memory on the GPU. (we didn't talk
-// about this type of memory in class, but constant memory is a fast
-// place to put read-only variables).
-
-// These need to be redefined for every .cu file
+// Define the constants in the first .cu file that is included in
 __constant__ GlobalConstants cuConstRendererParams;
 __constant__ SceneConstants cudaConstSceneParams;
+
+#else
+
+// Refer to the original file with an extern otherwise
+// See https://stackoverflow.com/questions/7959174/nvcc-combine-extern-and-constant
+//     ^^ Second answer, because the primary was written pre-cuda 5.0
+extern __constant__ GlobalConstants cuConstRendererParams;
+extern __constant__ SceneConstants cudaConstSceneParams;
+
+#endif
+
 
