@@ -12,6 +12,12 @@
 #include "cuda_error.h"
 #include "cuda_constants.h"
 
+// Refer to the constants that are defined in cudaRenderer.cu
+// See https://stackoverflow.com/questions/7959174/nvcc-combine-extern-and-constant
+//     ^^ Second answer, because the primary was written pre-cuda 5.0
+extern __constant__ GlobalConstants cuConstRendererParams;
+extern __constant__ SceneConstants cudaConstSceneParams;
+
 CudaScene::CudaScene(std::vector<CudaPrimitive *> primitives) {
     for ( auto & p : primitives ) {
         CudaSphere *s = dynamic_cast<CudaSphere *>(p);

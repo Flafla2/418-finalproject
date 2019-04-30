@@ -30,6 +30,8 @@
 // All cuda kernels here
 ///////////////////////////////////////////////////////////////////////////////////////
 
+__constant__ GlobalConstants cuConstRendererParams;
+__constant__ SceneConstants cudaConstSceneParams;
 
 
 /// Clear the image, setting all pixels to the specified color rgba
