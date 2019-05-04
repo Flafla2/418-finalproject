@@ -5,9 +5,6 @@
 #define uint unsigned int
 #endif
 
-#define GLM_FORCE_CUDA
-#include <glm/glm.hpp>
-
 #include "renderer.h"
 #include "CudaScene.h"
 

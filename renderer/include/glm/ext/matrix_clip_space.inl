@@ -222,7 +222,11 @@ namespace glm
 	template<typename T>
 	GLM_FUNC_QUALIFIER mat<4, 4, T, defaultp> perspectiveRH_ZO(T fovy, T aspect, T zNear, T zFar)
 	{
-		assert(abs(aspect - std::numeric_limits<T>::epsilon()) > static_cast<T>(0));
+#ifndef GLM_FORCE_CUDA
+        assert(abs(aspect - std::numeric_limits<T>::epsilon()) > static_cast<T>(0));
+#else
+        assert(abs(aspect - static_cast<T>(0.000001)) > static_cast<T>(0));
+#endif
 
 		T const tanHalfFovy = tan(fovy / static_cast<T>(2));
 
@@ -238,7 +242,11 @@ namespace glm
 	template<typename T>
 	GLM_FUNC_QUALIFIER mat<4, 4, T, defaultp> perspectiveRH_NO(T fovy, T aspect, T zNear, T zFar)
 	{
-		assert(abs(aspect - std::numeric_limits<T>::epsilon()) > static_cast<T>(0));
+#ifndef GLM_FORCE_CUDA
+        assert(abs(aspect - std::numeric_limits<T>::epsilon()) > static_cast<T>(0));
+#else
+        assert(abs(aspect - static_cast<T>(0.000001)) > static_cast<T>(0));
+#endif
 
 		T const tanHalfFovy = tan(fovy / static_cast<T>(2));
 
@@ -254,7 +262,11 @@ namespace glm
 	template<typename T>
 	GLM_FUNC_QUALIFIER mat<4, 4, T, defaultp> perspectiveLH_ZO(T fovy, T aspect, T zNear, T zFar)
 	{
+#ifndef GLM_FORCE_CUDA
 		assert(abs(aspect - std::numeric_limits<T>::epsilon()) > static_cast<T>(0));
+#else
+        assert(abs(aspect - static_cast<T>(0.000001)) > static_cast<T>(0));
+#endif
 
 		T const tanHalfFovy = tan(fovy / static_cast<T>(2));
 
@@ -270,7 +282,11 @@ namespace glm
 	template<typename T>
 	GLM_FUNC_QUALIFIER mat<4, 4, T, defaultp> perspectiveLH_NO(T fovy, T aspect, T zNear, T zFar)
 	{
-		assert(abs(aspect - std::numeric_limits<T>::epsilon()) > static_cast<T>(0));
+#ifndef GLM_FORCE_CUDA
+        assert(abs(aspect - std::numeric_limits<T>::epsilon()) > static_cast<T>(0));
+#else
+        assert(abs(aspect - static_cast<T>(0.000001)) > static_cast<T>(0));
+#endif
 
 		T const tanHalfFovy = tan(fovy / static_cast<T>(2));
 

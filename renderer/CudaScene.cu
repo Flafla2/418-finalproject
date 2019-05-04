@@ -2,38 +2,42 @@
 
 #include <iostream>
 
-CudaScene::CudaScene(std::vector<RefPrimitive *> primitives) {
-    for ( auto & p : primitives ) {
-        Sphere *s = dynamic_cast<Sphere *>(p);
-        if (s) {
-            spheres.push_back(*s);
-        }
-    }
+#include <cuda.h>
+#include <cuda_runtime.h>
+
+#define GLM_FORCE_CUDA
+#include <glm/glm.hpp>
+
+#define DEBUG
+#include "cuda_error.h"
+#include "cuda_constants.h"
+
+// Refer to the constants that are defined in cudaRenderer.cu
+// See https://stackoverflow.com/questions/7959174/nvcc-combine-extern-and-constant
+//     ^^ Second answer, because the primary was written pre-cuda 5.0
+extern __constant__ GlobalConstants cuConstRendererParams;
+extern __constant__ SceneConstants cudaConstSceneParams;
+
+CudaScene::CudaScene(std::vector<CudaSphere> spheres) {
+    this->spheres = spheres; // deep copy
 }
 
 CudaScene::~CudaScene() = default;
 
-struct SceneConstants {
-    CudaSphere *sphereData;
-    int nSphere;
-};
-
-__constant__ SceneConstants cudaConstSceneParams;
-
 __device__ float deviceSdf(glm::vec3 p) {
     float ret = 1000000.0f;
     for (int i = 0; i < cudaConstSceneParams.nSphere; ++i) {
-        float sdf = cudaConstSceneParams.sphereData[i].sdf(p);
+        float sdf = SphereSDF(cudaConstSceneParams.sphereData[i], p);
         ret = glm::min(sdf, ret);
     }
     return ret;
 }
 
 __device__ glm::vec3 deviceNormal(glm::vec3 p) {
-    static const float eps = 0.001f;
-    static const glm::vec3 x = glm::vec3(eps, 0, 0);
-    static const glm::vec3 y = glm::vec3(0, eps, 0);
-    static const glm::vec3 z = glm::vec3(0, 0, eps);
+    const float eps = 0.001f;
+    const glm::vec3 x = glm::vec3(eps, 0, 0);
+    const glm::vec3 y = glm::vec3(0, eps, 0);
+    const glm::vec3 z = glm::vec3(0, 0, eps);
 
     glm::vec3 ret(
             deviceSdf(p + x) - deviceSdf(p - x),
@@ -51,13 +55,19 @@ void CudaScene::initCudaData() {
     }
     cudaDataInitialized = true;
 
-    size_t const sphereSize = sizeof(Sphere) * spheres.size();
-    cudaMalloc(&cudaDeviceSphereData, sphereSize);
-    cudaMemcpy(cudaDeviceSphereData, spheres.data(), sphereSize, cudaMemcpyHostToDevice);
+    size_t const sphereSize = sizeof(CudaSphere) * spheres.size();
+    cudaCheckError(
+        cudaMalloc(&cudaDeviceSphereData, sphereSize)
+    );
+    cudaCheckError(
+        cudaMemcpy(cudaDeviceSphereData, spheres.data(), sphereSize, cudaMemcpyHostToDevice)
+    );
 
     SceneConstants params;
     params.sphereData = cudaDeviceSphereData;
     params.nSphere = spheres.size();
 
-    cudaMemcpyToSymbol(cudaConstSceneParams, &params, sizeof(SceneConstants));
+    cudaCheckError(
+        cudaMemcpyToSymbol(cudaConstSceneParams, &params, sizeof(SceneConstants))
+    );
 }
