@@ -1,3 +1,5 @@
+#define GLM_SWIZZLE
+#include <glm/glm.hpp>
 #include <glm/geometric.hpp>
 
 #include "RefPrimitive.h"
@@ -13,19 +15,23 @@ float RefBox::sdf(glm::vec3 p) const {
 }
 
 float RefTorus::sdf(glm::vec3 p) const {
-    glm::vec2 q = glm::vec2(glm::length(center.xz) - t.x, center.y);
-    return glm::length(q) - t.y;
+    p = p - center;
+    glm::vec2 q = glm::vec2(glm::length(p.xz()) - radius, p.y);
+    return glm::length(q) - thickness;
 }
 
 float RefCylinder::sdf(glm::vec3 p) const{
-    return glm::length(center.xz - dim.xy) - dim.z;
+    p = p - center;
+    return glm::length(p.xz()) - radius;
 }
 
 float RefCone::sdf(glm::vec3 p) const{
-    float q = glm::length(p.xy);
-    return glm::dot(dim, glm::vec2(q, center.z));
+    p = p - center;
+    float q = glm::length(p.xy());
+    return glm::dot(dir, glm::vec2(q, p.z));
 }
 
-float RefPlane::sdf(glm::vec3 p) const{
-    return glm::dot(center, dim.xyz) + dim.w;
+float RefPlane::sdf(glm::vec3 p) const {
+    p = p - center;
+    return glm::dot(p, normal) + offset;
 }

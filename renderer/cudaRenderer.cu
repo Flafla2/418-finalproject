@@ -11,31 +11,28 @@
 
 #define GLM_FORCE_CUDA
 #include <glm/glm.hpp>
+#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "cudaRenderer.h"
 #include "image.h"
 #include "sceneLoader.h"
 #include "util.h"
+#include "cycleTimer.h"
+
+#define DEBUG
+#include "cuda_error.h"
+#include "cuda_constants.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // All cuda kernels here
 ///////////////////////////////////////////////////////////////////////////////////////
 
-struct GlobalConstants {
-    SceneName sceneName;
-
-    int imageWidth;
-    int imageHeight;
-    float* imageData;
-};
-
-// Global variable that is in scope, but read-only, for all cuda
-// kernels.  The __constant__ modifier designates this variable will
-// be stored in special "constant" memory on the GPU. (we didn't talk
-// about this type of memory in class, but constant memory is a fast
-// place to put read-only variables).
 __constant__ GlobalConstants cuConstRendererParams;
+__constant__ SceneConstants cudaConstSceneParams;
+
 
 /// Clear the image, setting all pixels to the specified color rgba
 /// \param r Red color component (0-1 range)
@@ -62,10 +59,13 @@ __global__ void kernelClearImage(float r, float g, float b, float a) {
     *(float4*)(&cuConstRendererParams.imageData[offset]) = value;
 }
 
+#define MAX_STEPS 64
 
 __device__ __inline__ void
 shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
            glm::mat4x4 invView, glm::vec3 camPos) {
+    float4 ret;
+
     // Inverse project to get point on near clip plane (in NDC, z = -1 corresponds to the
     // near clip plane.  Also w = 1.0 in NDC)
     glm::vec4 ptView  = invProj * glm::vec4(pixelCenter.x*2-1, pixelCenter.y*2-1, -1.f, 1.f);
@@ -76,9 +76,9 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
 
     glm::vec3 ray = glm::normalize(glm::vec3(ptWorld) - camPos);
 
-    float4 ret;
     float t = 0.f;
-    for (int march = 0; march < 64; ++march) {
+    int march;
+    for (march = 0; march < MAX_STEPS; ++march) {
 
         glm::vec3 p = camPos + ray * t;
         float sdf = deviceSdf(p);
@@ -104,6 +104,13 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
             t += sdf;
         }
 
+    }
+
+    if (march >= MAX_STEPS) {
+        ret.x = (ray.x+1)/2;
+        ret.y = (ray.y+1)/2;
+        ret.z = (ray.z+1)/2;
+        ret.w = 1.0;
     }
 
     // Global memory write
@@ -150,10 +157,10 @@ const Image* CudaRenderer::getImage() {
 
     printf("Copying image data from device\n");
 
-    cudaMemcpy(image->data,
+    cudaCheckError( cudaMemcpy(image->data,
                cudaDeviceImageData,
                sizeof(float) * 4 * image->width * image->height,
-               cudaMemcpyDeviceToHost);
+               cudaMemcpyDeviceToHost) );
 
     return image;
 }
@@ -203,7 +210,9 @@ void CudaRenderer::setup() {
     //
     // See the CUDA Programmer's Guide for descriptions of
     // cudaMalloc and cudaMemcpy
-    cudaMalloc(&cudaDeviceImageData, sizeof(float) * 4 * image->width * image->height);
+    cudaCheckError(
+        cudaMalloc(&cudaDeviceImageData, sizeof(float) * 4 * image->width * image->height)
+    );
 
     // Initialize parameters in constant memory.  We didn't talk about
     // constant memory in class, but the use of read-only constant
@@ -219,7 +228,9 @@ void CudaRenderer::setup() {
     params.imageHeight = image->height;
     params.imageData = cudaDeviceImageData;
 
-    cudaMemcpyToSymbol(cuConstRendererParams, &params, sizeof(GlobalConstants));
+    cudaCheckError(
+        cudaMemcpyToSymbol(cuConstRendererParams, &params, sizeof(GlobalConstants))
+    );
 
     scene->initCudaData();
 }
@@ -242,8 +253,9 @@ void CudaRenderer::clearImage() {
         (image->height + blockDim.y - 1) / blockDim.y);
 
     kernelClearImage<<<gridDim, blockDim>>>(1.f, 1.f, 1.f, 1.f);
-    
-    cudaDeviceSynchronize();
+    cudaCheckError(
+        cudaDeviceSynchronize()
+    );
 }
 
 
@@ -261,10 +273,11 @@ void CudaRenderer::render() {
             (image->width + blockDim.x - 1) / blockDim.x,
             (image->height + blockDim.y - 1) / blockDim.y);
 
-    static std::clock_t begin = clock();
-    std::clock_t cur = clock();
+    static double begin = CycleTimer::currentSeconds();
+    double cur = CycleTimer::currentSeconds();
 
-    double elapsed_secs = double(cur - begin) / CLOCKS_PER_SEC;
+    double elapsed_secs = cur - begin;
+    printf("Time elapsed: %f\n", elapsed_secs);
 
     glm::vec3 camPos(glm::sin(elapsed_secs) * 5.0f, 0.f, glm::cos(elapsed_secs) * 5.0f);
     glm::vec3 camLook(0.f, 0.f, 0.f);
@@ -276,5 +289,7 @@ void CudaRenderer::render() {
     glm::mat4x4 invProj = glm::inverse(glm::perspective(30.0f, aspect, 0.3f, 200.0f));
 
     kernelRender<<<gridDim, blockDim>>>(invProj, invView, camPos);
-    cudaDeviceSynchronize();
+    cudaCheckError(
+        cudaDeviceSynchronize()
+    );
 }
