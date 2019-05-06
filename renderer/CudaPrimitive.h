@@ -147,7 +147,7 @@ struct CudaPlane : CudaPrimitive {
 __device__ __host__
 float PlaneSDF(CudaPlane const& plane, glm::vec3 p);
 
-static_assert(sizeof(CudaPlane) == sizeof(CudaPrimitive) + sizeof(glm::vec3), "CudaPlane is packed");
+static_assert(sizeof(CudaPlane) == sizeof(CudaPrimitive) + sizeof(glm::vec3) + sizeof(float), "CudaPlane is packed");
 
 
 #endif //RAYMARCHER_CUDAPRIMITIVE_H

@@ -35,42 +35,42 @@ static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
     if (sphere) {
         ret.push_back(CudaOpcodes::Sphere);
         appendStruct(ret, CudaSphere(sphere));
-        continue;
+        return;
     }
 
     RefBox const*box = dynamic_cast<RefBox const*>(cur);
     if (box) {
         ret.push_back(CudaOpcodes::Box);
         appendStruct(ret, CudaBox(box));
-        continue;
+        return;
     }
 
     RefTorus const*torus = dynamic_cast<RefTorus const*>(cur);
     if (torus) {
         ret.push_back(CudaOpcodes::Torus);
         appendStruct(ret, CudaTorus(torus));
-        continue;
+        return;
     }
 
     RefCylinder const*cylinder = dynamic_cast<RefCylinder const*>(cur);
     if (cylinder) {
         ret.push_back(CudaOpcodes::Cylinder);
         appendStruct(ret, CudaCylinder(cylinder));
-        continue;
+        return;
     }
 
     RefCone const*cone = dynamic_cast<RefCone const*>(cur);
     if (cone) {
         ret.push_back(CudaOpcodes::Cone);
         appendStruct(ret, CudaCone(cone));
-        continue;
+        return;
     }
 
     RefPlane const*plane = dynamic_cast<RefPlane const*>(cur);
     if (plane) {
         ret.push_back(CudaOpcodes::Plane);
         appendStruct(ret, CudaPlane(plane));
-        continue;
+        return;
     }
 
     RefCombine const*combine = dynamic_cast<RefCombine const*>(cur);
@@ -90,6 +90,7 @@ static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
                 ret.push_back(0x02);
                 break;
         }
+        return;
     }
 
     RefCombineSmooth const*combineSmooth = dynamic_cast<RefCombineSmooth const*>(cur);
@@ -109,12 +110,13 @@ static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
                 ret.push_back(0x02);
                 break;
         }
-        appendPrimitive<float>(ret, combineSmooth->smoothing);
+        appendStruct<float>(ret, combineSmooth->smoothing);
+        return;
     }
 }
 
-std::vector<char> CudaOpcodes::refToBytecode(std::vector<RefPrimitive const*> const& prims) {
-    sdt::vector<char> ret;
+std::vector<char> CudaOpcodes::refToBytecode(std::vector<RefPrimitive *> const& prims) {
+    std::vector<char> ret;
 
     for(int p = 0; p < prims.size(); ++p) {
         RefPrimitive const* cur = prims[p];
@@ -133,7 +135,7 @@ std::vector<char> CudaOpcodes::refToBytecode(std::vector<RefPrimitive const*> co
     return ret;
 }
 
-CudaScene::CudaScene(std::vector<RefPrimitive const*> const& prims) {
+CudaScene::CudaScene(std::vector<RefPrimitive *> const& prims) {
     bytecode = CudaOpcodes::refToBytecode(prims);
 }
 
@@ -156,37 +158,43 @@ __device__ float deviceSdf(glm::vec3 p) {
         const char instruction = bytecode[pc++];
 
         switch(instruction) {
-            case CudaOpcodes::Sphere:
-                CudaSphere const *s = reinterpret_cast<CudaSphere const*>(&bytecode[pc]);
+            case CudaOpcodes::Sphere: {
+                CudaSphere const *s = reinterpret_cast<CudaSphere const *>(&bytecode[pc]);
                 stack[++sc] = SphereSDF(*s, p);
                 pc += sizeof(CudaSphere);
                 break;
-            case CudaOpcodes::Box:
+            }
+            case CudaOpcodes::Box: {
                 CudaBox const *b = reinterpret_cast<CudaBox const*>(&bytecode[pc]);
                 stack[++sc] = BoxSDF(*b, p);
                 pc += sizeof(CudaBox);
                 break;
-            case CudaOpcodes::Torus:
+            }
+            case CudaOpcodes::Torus: {
                 CudaTorus const *t = reinterpret_cast<CudaTorus const*>(&bytecode[pc]);
                 stack[++sc] = TorusSDF(*t, p);
                 pc += sizeof(CudaTorus);
                 break;
-            case CudaOpcodes::Cylinder:
+            }
+            case CudaOpcodes::Cylinder: {
                 CudaCylinder const *c = reinterpret_cast<CudaCylinder const*>(&bytecode[pc]);
                 stack[++sc] = CylinderSDF(*c, p);
                 pc += sizeof(CudaTorus);
                 break;
-            case CudaOpcodes::Cone:
+            }
+            case CudaOpcodes::Cone: {
                 CudaCone const *k = reinterpret_cast<CudaCone const*>(&bytecode[pc]);
                 stack[++sc] = ConeSDF(*k, p);
                 pc += sizeof(CudaCone);
                 break;
-            case CudaOpcodes::Plane:
+            }
+            case CudaOpcodes::Plane: {
                 CudaPlane const *l = reinterpret_cast<CudaPlane const*>(&bytecode[pc]);
                 stack[++sc] = PlaneSDF(*l, p);
                 pc += sizeof(CudaPlane);
                 break;
-            case CudaOpcodes::Combine:
+            }
+            case CudaOpcodes::Combine: {
                 float p1 = stack[sc--];
                 float p2 = stack[sc--];
                 switch(bytecode[pc]) {
@@ -203,7 +211,8 @@ __device__ float deviceSdf(glm::vec3 p) {
                 }
                 pc++;
                 break;
-            case CudaOpcodes::CombineSmooth:
+            }
+            case CudaOpcodes::CombineSmooth: {
                 float d1 = stack[sc--];
                 float d2 = stack[sc--];
                 float smoothing = *(reinterpret_cast<float const*>(&bytecode[pc + 1]));
@@ -226,6 +235,7 @@ __device__ float deviceSdf(glm::vec3 p) {
                 }
                 pc += sizeof(float) + 1;
                 break;
+            }
         }
     }
 
@@ -255,10 +265,10 @@ void CudaScene::initCudaData() {
     cudaDataInitialized = true;
 
     cudaCheckError(
-        cudaMalloc(&cudaDeviceBytecode, bytecode.size())
+            cudaMalloc(&cudaDeviceBytecode, bytecode.size())
     );
     cudaCheckError(
-        cudaMemcpy(cudaDeviceBytecode, bytecode.data(), bytecode.size(), cudaMemcpyHostToDevice)
+            cudaMemcpy(cudaDeviceBytecode, bytecode.data(), bytecode.size(), cudaMemcpyHostToDevice)
     );
 
     SceneConstants params;
@@ -266,6 +276,6 @@ void CudaScene::initCudaData() {
     params.bytecodeSize = bytecode.size();
 
     cudaCheckError(
-        cudaMemcpyToSymbol(cudaConstSceneParams, &params, sizeof(SceneConstants))
+            cudaMemcpyToSymbol(cudaConstSceneParams, &params, sizeof(SceneConstants))
     );
 }

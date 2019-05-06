@@ -2,7 +2,7 @@
 #ifndef RAYMARCHER_REFPRIMITIVE_H
 #define RAYMARCHER_REFPRIMITIVE_H
 
-#include <glm/vec3.hpp>
+#include <glm/glm.hpp>
 
 // https://stackoverflow.com/questions/18290523/is-a-default-move-constructor-equivalent-to-a-member-wise-move-constructor
 #define DEFAULT_MOVE(ClassName) \
@@ -66,7 +66,7 @@ public:
             glm::mat4x4 const& world2local = glm::mat4x4(1.f)) :
         p1(p1), p2(p2), op(op), RefPrimitive(world2local) {}
 
-    DEFAULT_MOVE(RefCombine);
+    DEFAULT_MOVE(RefCombine)
 
     float sdf(glm::vec3 const& p) const override;
 

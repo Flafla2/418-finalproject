@@ -44,12 +44,12 @@ namespace CudaOpcodes {
     // Consumes 2 sdfs from float stack and pushes 1 combined sdf
     const char CombineSmooth = 0x08;
 
-    std::vector<char> refToBytecode(std::vector<RefPrimitive const*> prims);
+    std::vector<char> refToBytecode(std::vector<RefPrimitive *> const& prims);
 }
 
 class CudaScene {
 public:
-    explicit CudaScene(std::vector<RefPrimitive const*> const& prims);
+    explicit CudaScene(std::vector<RefPrimitive *> const& prims);
     ~CudaScene();
 
     void initCudaData();
