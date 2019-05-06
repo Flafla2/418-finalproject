@@ -71,8 +71,8 @@ void RefRenderer::advanceAnimation() {
 /// \param camPos Camera position
 void RefRenderer::shadePixel(
     float pixelCenterX, float pixelCenterY,
-    float* pixelData, glm::mat4x4 invProj,
-    glm::mat4x4 invView, glm::vec3 camPos)
+    float* pixelData, glm::mat4x4 const& invProj,
+    glm::mat4x4 const& invView, glm::vec3 const& camPos)
 {
     // Inverse project to get point on near clip plane (in NDC, z = -1 corresponds to the
     // near clip plane.  Also w = 1.0 in NDC)
@@ -80,9 +80,9 @@ void RefRenderer::shadePixel(
     // Apply homogenous coordinate from projection matrix
     ptView /= ptView.w;
     // Bring view space point into world space
-    glm::vec4 ptWorld = invView * ptView;
+    glm::vec3 ptWorld = glm::vec3(invView * ptView);
 
-    glm::vec3 ray = glm::normalize(glm::vec3(ptWorld) - camPos);
+    glm::vec3 ray = glm::normalize(ptWorld - camPos);
 
     float t = 0.f;
     for (int march = 0; march < 64; ++march) {

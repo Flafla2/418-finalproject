@@ -11,8 +11,8 @@ public:
     explicit RefScene(std::vector<RefPrimitive *> primitives);
     ~RefScene();
 
-    float sdf(glm::vec3 p);
-    glm::vec3 normal(glm::vec3 p);
+    float sdf(glm::vec3 const& p);
+    glm::vec3 normal(glm::vec3 const& p);
 private:
     std::vector<RefPrimitive *> primitives;
 };

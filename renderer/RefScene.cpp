@@ -4,7 +4,7 @@ RefScene::RefScene(std::vector<RefPrimitive *> primitives) : primitives(primitiv
 
 RefScene::~RefScene() { }
 
-float RefScene::sdf(glm::vec3 p) {
+float RefScene::sdf(glm::vec3 const& p) {
     float ret = std::numeric_limits<float>::infinity();
 
     for (auto & primitive : primitives) {
@@ -14,7 +14,7 @@ float RefScene::sdf(glm::vec3 p) {
     return ret;
 }
 
-glm::vec3 RefScene::normal(glm::vec3 p) {
+glm::vec3 RefScene::normal(glm::vec3 const& p) {
     static const float eps = 0.001f;
     static const glm::vec3 x = glm::vec3(eps, 0, 0);
     static const glm::vec3 y = glm::vec3(0, eps, 0);
