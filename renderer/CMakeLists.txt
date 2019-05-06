@@ -54,11 +54,13 @@ if(CMAKE_CUDA_COMPILER)
   target_compile_features(raymarcher-cuda PUBLIC cxx_std_11)
   set_target_properties(raymarcher-cuda PROPERTIES CXX_EXTENSIONS OFF)
 
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-deprecated-gpu-targets")
+
   # https://devblogs.nvidia.com/building-cuda-applications-cmake/
   if(APPLE)
     # We need to add the path to the driver (libcuda.dylib) as an rpath, 
     # so that the static cuda runtime can find it at runtime.
-    set_property(TARGET particle_test 
+    set_property(TARGET raymarcher-cuda
                  PROPERTY
                  BUILD_RPATH ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
   endif()
