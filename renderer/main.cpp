@@ -103,9 +103,22 @@ int main(int argc, char** argv)
 
     sceneNameStr = argv[optind];
 
-    if (sceneNameStr.compare("test") == 0) {
-        sceneName = TEST_SCENE;
-    } else {
+    if (sceneNameStr.compare("test1") == 0) {
+        sceneName = TEST_SCENE1;
+    }
+    else if (sceneNameStr.compare("test2") == 0) {
+        sceneName = TEST_SCENE2;
+    }
+    else if (sceneNameStr.compare("test3") == 0) {
+        sceneName = TEST_SCENE3;
+    }
+    else if (sceneNameStr.compare("test4") == 0) {
+        sceneName = TEST_SCENE4;
+    }
+    else if (sceneNameStr.compare("test5") == 0) {
+        sceneName = TEST_SCENE5;
+    }
+    else {
         fprintf(stderr, "Unknown scene name (%s)\n", sceneNameStr.c_str());
         usage(argv[0]);
         return 1;

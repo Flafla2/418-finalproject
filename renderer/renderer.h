@@ -5,7 +5,11 @@ struct Image;
 
 typedef enum {
     INVALID,
-    TEST_SCENE
+    TEST_SCENE1,
+    TEST_SCENE2,
+    TEST_SCENE3,
+    TEST_SCENE4,
+    TEST_SCENE5
 } SceneName;
 
 class Renderer {
