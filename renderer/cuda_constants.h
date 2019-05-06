@@ -12,8 +12,8 @@ struct GlobalConstants {
 };
 
 struct SceneConstants {
-    CudaSphere *sphereData;
-    int nSphere;
+    char *bytecode;
+    int bytecodeSize;
 };
 
 #endif

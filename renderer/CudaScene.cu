@@ -18,19 +18,218 @@
 extern __constant__ GlobalConstants cuConstRendererParams;
 extern __constant__ SceneConstants cudaConstSceneParams;
 
-CudaScene::CudaScene(std::vector<CudaSphere> spheres) {
-    this->spheres = spheres; // deep copy
+
+/// Appends the bytes that make up <c>data</c> to <c>vec</c>
+/// \tparam T Type of <c>data</c>, so <c>sizeof(T)</c> bytes will be appended
+/// \param vec Vector to append to
+/// \param data Data to append
+template<typename T>
+static void appendStruct(std::vector<char> &vec, T const& data) {
+    char const*raw = reinterpret_cast<char const*>(&data);
+    vec.insert(vec.end(), raw, raw + sizeof(T));
+}
+
+__host__
+static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
+    RefSphere const*sphere = dynamic_cast<RefSphere const*>(cur);
+    if (sphere) {
+        ret.push_back(CudaOpcodes::Sphere);
+        appendStruct(ret, CudaSphere(sphere));
+        continue;
+    }
+
+    RefBox const*box = dynamic_cast<RefBox const*>(cur);
+    if (box) {
+        ret.push_back(CudaOpcodes::Box);
+        appendStruct(ret, CudaBox(box));
+        continue;
+    }
+
+    RefTorus const*torus = dynamic_cast<RefTorus const*>(cur);
+    if (torus) {
+        ret.push_back(CudaOpcodes::Torus);
+        appendStruct(ret, CudaTorus(torus));
+        continue;
+    }
+
+    RefCylinder const*cylinder = dynamic_cast<RefCylinder const*>(cur);
+    if (cylinder) {
+        ret.push_back(CudaOpcodes::Cylinder);
+        appendStruct(ret, CudaCylinder(cylinder));
+        continue;
+    }
+
+    RefCone const*cone = dynamic_cast<RefCone const*>(cur);
+    if (cone) {
+        ret.push_back(CudaOpcodes::Cone);
+        appendStruct(ret, CudaCone(cone));
+        continue;
+    }
+
+    RefPlane const*plane = dynamic_cast<RefPlane const*>(cur);
+    if (plane) {
+        ret.push_back(CudaOpcodes::Plane);
+        appendStruct(ret, CudaPlane(plane));
+        continue;
+    }
+
+    RefCombine const*combine = dynamic_cast<RefCombine const*>(cur);
+    if (combine) {
+        appendPrimitive(ret, combine->p1);
+        appendPrimitive(ret, combine->p2);
+
+        ret.push_back(CudaOpcodes::Combine);
+        switch(combine->op) {
+            case UNION:
+                ret.push_back(0x00);
+                break;
+            case DIFF:
+                ret.push_back(0x01);
+                break;
+            case ISECT:
+                ret.push_back(0x02);
+                break;
+        }
+    }
+
+    RefCombineSmooth const*combineSmooth = dynamic_cast<RefCombineSmooth const*>(cur);
+    if (combineSmooth) {
+        appendPrimitive(ret, combineSmooth->p1);
+        appendPrimitive(ret, combineSmooth->p2);
+
+        ret.push_back(CudaOpcodes::CombineSmooth);
+        switch(combineSmooth->op) {
+            case UNION:
+                ret.push_back(0x00);
+                break;
+            case DIFF:
+                ret.push_back(0x01);
+                break;
+            case ISECT:
+                ret.push_back(0x02);
+                break;
+        }
+        appendPrimitive<float>(ret, combineSmooth->smoothing);
+    }
+}
+
+std::vector<char> CudaOpcodes::refToBytecode(std::vector<RefPrimitive const*> const& prims) {
+    sdt::vector<char> ret;
+
+    for(int p = 0; p < prims.size(); ++p) {
+        RefPrimitive const* cur = prims[p];
+
+        appendPrimitive(ret, cur);
+        if(p != 0) {
+            // At the root level of iterating through RefPrimitives, there is an implicit
+            // minimization of all SDFs.  Theoretically you could represent a vector of
+            // RefPrimitives as a tree of RefCombine primitives with UNION operation
+            ret.push_back(CudaOpcodes::Combine);
+            ret.push_back(0x00); // union
+        }
+
+    }
+
+    return ret;
+}
+
+CudaScene::CudaScene(std::vector<RefPrimitive const*> const& prims) {
+    bytecode = CudaOpcodes::refToBytecode(prims);
 }
 
 CudaScene::~CudaScene() = default;
 
+// Maximum depth of instruction stack
+#define STACK_SIZE 64
+
 __device__ float deviceSdf(glm::vec3 p) {
-    float ret = 1000000.0f;
-    for (int i = 0; i < cudaConstSceneParams.nSphere; ++i) {
-        float sdf = SphereSDF(cudaConstSceneParams.sphereData[i], p);
-        ret = glm::min(sdf, ret);
+    char const*const bytecode = cudaConstSceneParams.bytecode;
+    int const size = cudaConstSceneParams.bytecodeSize;
+
+    int sc = -1; // stack counter
+    int pc = 0; // program counter
+
+    // Stack of SDFs that will be coalesced by combination instructions
+    float stack[STACK_SIZE];
+
+    while (pc < size) {
+        const char instruction = bytecode[pc++];
+
+        switch(instruction) {
+            case CudaOpcodes::Sphere:
+                CudaSphere const *s = reinterpret_cast<CudaSphere const*>(&bytecode[pc]);
+                stack[++sc] = SphereSDF(*s, p);
+                pc += sizeof(CudaSphere);
+                break;
+            case CudaOpcodes::Box:
+                CudaBox const *b = reinterpret_cast<CudaBox const*>(&bytecode[pc]);
+                stack[++sc] = BoxSDF(*b, p);
+                pc += sizeof(CudaBox);
+                break;
+            case CudaOpcodes::Torus:
+                CudaTorus const *t = reinterpret_cast<CudaTorus const*>(&bytecode[pc]);
+                stack[++sc] = TorusSDF(*t, p);
+                pc += sizeof(CudaTorus);
+                break;
+            case CudaOpcodes::Cylinder:
+                CudaCylinder const *c = reinterpret_cast<CudaCylinder const*>(&bytecode[pc]);
+                stack[++sc] = CylinderSDF(*c, p);
+                pc += sizeof(CudaTorus);
+                break;
+            case CudaOpcodes::Cone:
+                CudaCone const *k = reinterpret_cast<CudaCone const*>(&bytecode[pc]);
+                stack[++sc] = ConeSDF(*k, p);
+                pc += sizeof(CudaCone);
+                break;
+            case CudaOpcodes::Plane:
+                CudaPlane const *l = reinterpret_cast<CudaPlane const*>(&bytecode[pc]);
+                stack[++sc] = PlaneSDF(*l, p);
+                pc += sizeof(CudaPlane);
+                break;
+            case CudaOpcodes::Combine:
+                float p1 = stack[sc--];
+                float p2 = stack[sc--];
+                switch(bytecode[pc]) {
+                    case 0x00: // union
+                        stack[++sc] = glm::min(p1, p2);
+                        break;
+                    case 0x01: // diff
+                        stack[++sc] = glm::max(-p1, p2);
+                        break;
+                    case 0x02: // isect
+                        stack[++sc] = glm::max(p1, p2);
+                        break;
+                    default: break;
+                }
+                pc++;
+                break;
+            case CudaOpcodes::CombineSmooth:
+                float d1 = stack[sc--];
+                float d2 = stack[sc--];
+                float smoothing = *(reinterpret_cast<float const*>(&bytecode[pc + 1]));
+
+                float h;
+                switch(bytecode[pc]) {
+                    case 0x00: // union
+                        h = glm::clamp( 0.5 + 0.5 * (d2 - d1) / smoothing, 0.0, 1.0 );
+                        stack[++sc] = glm::mix( d2, d1, h ) - smoothing * h * (1.0 - h);
+                        break;
+                    case 0x01: // diff
+                        h = glm::clamp( 0.5 - 0.5 * (d2 + d1) / smoothing, 0.0, 1.0 );
+                        stack[++sc] = glm::mix( d2, -d1, h ) + smoothing * h * (1.0 - h);
+                        break;
+                    case 0x02: // isect
+                        h = glm::clamp( 0.5 - 0.5 * (d2 - d1) / smoothing, 0.0, 1.0 );
+                        stack[++sc] = glm::mix( d2, d1, h ) + smoothing * h * (1.0 - h);
+                        break;
+                    default: break;
+                }
+                pc += sizeof(float) + 1;
+                break;
+        }
     }
-    return ret;
+
+    return stack[0];
 }
 
 __device__ glm::vec3 deviceNormal(glm::vec3 p) {
@@ -55,17 +254,16 @@ void CudaScene::initCudaData() {
     }
     cudaDataInitialized = true;
 
-    size_t const sphereSize = sizeof(CudaSphere) * spheres.size();
     cudaCheckError(
-        cudaMalloc(&cudaDeviceSphereData, sphereSize)
+        cudaMalloc(&cudaDeviceBytecode, bytecode.size())
     );
     cudaCheckError(
-        cudaMemcpy(cudaDeviceSphereData, spheres.data(), sphereSize, cudaMemcpyHostToDevice)
+        cudaMemcpy(cudaDeviceBytecode, bytecode.data(), bytecode.size(), cudaMemcpyHostToDevice)
     );
 
     SceneConstants params;
-    params.sphereData = cudaDeviceSphereData;
-    params.nSphere = spheres.size();
+    params.bytecode = cudaDeviceBytecode;
+    params.bytecodeSize = bytecode.size();
 
     cudaCheckError(
         cudaMemcpyToSymbol(cudaConstSceneParams, &params, sizeof(SceneConstants))
