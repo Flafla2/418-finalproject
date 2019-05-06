@@ -28,6 +28,7 @@ void usage(const char* progname) {
     printf("  -d  --frame-data           Print frame timing data (Clear/Advance/Render)");
     printf("  -w  --width  <INT>         Set width (default: 800px)\n");
     printf("  -h  --height <INT>         Set height (default: 600px)\n");
+    printf("  -e  --emit-bytecode        Emit CUDA bytecode (requires running in CUDA mode)\n");
     printf("  -?  --help                 This message\n");
 }
 
@@ -46,6 +47,7 @@ int main(int argc, char** argv)
     bool useRefRenderer = true;
     bool frameData = false;
     bool checkCorrectness = false;
+    bool emitBytecode = false;
 
     // parse commandline options ////////////////////////////////////////////
     int opt;
@@ -58,10 +60,11 @@ int main(int argc, char** argv)
         {"width",    1, 0,  'w'},
         {"height",   1, 0,  'h'},
         {"frame-data", 1, 0, 'd'},
+        {"emit-bytecode", 1, 0, 'e'},
         {0 ,0, 0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "b:f:r:w:h:c?d", long_options, nullptr)) != EOF) {
+    while ((opt = getopt_long(argc, argv, "b:f:r:w:h:c?de", long_options, nullptr)) != EOF) {
 
         switch (opt) {
         case 'b':
@@ -90,6 +93,9 @@ int main(int argc, char** argv)
             break;
         case 'd':
             frameData = true;
+            break;
+        case 'e':
+            emitBytecode = true;
             break;
         case '?':
         default:
@@ -162,8 +168,11 @@ int main(int argc, char** argv)
 #if WITH_CUDA
         if (useRefRenderer)
             renderer = new RefRenderer();
-        else
-            renderer = new CudaRenderer();
+        else {
+            CudaRenderer *cr = new CudaRenderer();
+            cr->emitBytecode = emitBytecode;
+            renderer = cr;
+        }
 #else
         if (!useRefRenderer) {
             fprintf(stderr, "Rendering with CUDA is not supported when compiling without CUDA.\n");

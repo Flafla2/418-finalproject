@@ -20,7 +20,8 @@ extern __constant__ GlobalConstants cuConstRendererParams;
 extern __constant__ SceneConstants cudaConstSceneParams;
 
 
-#define LOG_BYTECODE_PER_STRUCT
+// Uncomment to debug individual struct data that are loaded into bytecode
+// #define LOG_BYTECODE_PER_STRUCT
 
 /// Appends the bytes that make up <c>data</c> to <c>vec</c>
 /// \tparam T Type of <c>data</c>, so <c>sizeof(T)</c> bytes will be appended
@@ -30,6 +31,7 @@ template<typename T>
 static void appendStruct(std::vector<char> &vec, T const& data) {
     char const*raw = reinterpret_cast<char const*>(&data);
     vec.insert(vec.end(), raw, raw + sizeof(T));
+
 #if defined(DEBUG) && defined(LOG_BYTECODE_PER_STRUCT)
     std::cout << "Appending struct to byte stream: " << typeid(T).name();
     std::cout << std::hex;
@@ -147,7 +149,7 @@ static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
     }
 }
 
-std::vector<char> CudaOpcodes::refToBytecode(std::vector<RefPrimitive *> const& prims) {
+std::vector<char> CudaOpcodes::refToBytecode(std::vector<RefPrimitive *> const& prims, bool emitBytecode) {
     std::vector<char> ret;
 
     for(int p = 0; p < prims.size(); ++p) {
@@ -164,26 +166,26 @@ std::vector<char> CudaOpcodes::refToBytecode(std::vector<RefPrimitive *> const& 
 
     }
 
-#if defined(DEBUG)
-    std::cout << "Loaded bytecode:" << std::endl << std::hex;
-    for(int x = 0; x < ret.size(); ++x) {
-        if (x > 0) {
-            if (x % 16 == 0)
-                std::cout << std::endl;
-            else
-                std::cout << ' ';
-        }
+    if (emitBytecode) {
+        std::cout << "Loaded bytecode:" << std::endl << std::hex;
+        for(int x = 0; x < ret.size(); ++x) {
+            if (x > 0) {
+                if (x % 16 == 0)
+                    std::cout << std::endl;
+                else
+                    std::cout << ' ';
+            }
 
-        std::cout << std::setfill('0') << std::setw(2) << (static_cast<int>(ret[x]) & 0xff);
+            std::cout << std::setfill('0') << std::setw(2) << (static_cast<int>(ret[x]) & 0xff);
+        }
+        std::cout << std::dec << std::endl << "[EOF]" << std::endl;
     }
-    std::cout << std::dec << std::endl << "[EOF]" << std::endl;
-#endif
 
     return ret;
 }
 
-CudaScene::CudaScene(std::vector<RefPrimitive *> const& prims) {
-    bytecode = CudaOpcodes::refToBytecode(prims);
+CudaScene::CudaScene(std::vector<RefPrimitive *> const& prims, bool emitBytecode) {
+    bytecode = CudaOpcodes::refToBytecode(prims, emitBytecode);
 }
 
 CudaScene::~CudaScene() = default;

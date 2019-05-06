@@ -167,7 +167,7 @@ const Image* CudaRenderer::getImage() {
 
 void CudaRenderer::loadScene(SceneName name) {
     sceneName = name;
-    scene = SceneLoader::loadSceneCuda(sceneName);
+    scene = SceneLoader::loadSceneCuda(sceneName, emitBytecode);
 }
 
 void CudaRenderer::setup() {

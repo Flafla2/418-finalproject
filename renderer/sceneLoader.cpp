@@ -74,11 +74,11 @@ static std::vector<RefPrimitive *> refPrimsFromScene(SceneName sceneName) {
 }
 
 #if WITH_CUDA
-CudaScene *SceneLoader::loadSceneCuda(SceneName sceneName)
+CudaScene *SceneLoader::loadSceneCuda(SceneName sceneName, bool emitBytecode)
 {
     auto prims = refPrimsFromScene(sceneName);
     printf("Loaded scene\n");
-    CudaScene *scene = new CudaScene(prims);
+    CudaScene *scene = new CudaScene(prims, emitBytecode);
     printf("CUDA bytecode generated\n");
     return scene;
 }
