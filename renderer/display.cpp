@@ -144,7 +144,7 @@ void handleResize(int width, int height) {
         glutReshapeWindow(gDisplay.width, gDisplay.height);
 }
 
-void startRendererWithDisplay(Renderer* renderer) {
+void startRendererWithDisplay(Renderer* renderer, bool printStats) {
 
     // setup the display
 
@@ -153,7 +153,7 @@ void startRendererWithDisplay(Renderer* renderer) {
     gDisplay.renderer = renderer;
     gDisplay.updateSim = true;
     gDisplay.pauseSim = false;
-    gDisplay.printStats = true;
+    gDisplay.printStats = printStats;
     gDisplay.lastFrameTime = CycleTimer::currentSeconds();
     gDisplay.width = img->width;
     gDisplay.height = img->height;

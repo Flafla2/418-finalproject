@@ -11,6 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+#include "cycleTimer.h"
 #include "refRenderer.h"
 #include "image.h"
 #include "sceneLoader.h"
@@ -118,10 +119,10 @@ void RefRenderer::render() {
     float invWidth = 1.f / image->width;
     float invHeight = 1.f / image->height;
 
-    static std::clock_t begin = clock();
-    std::clock_t cur = clock();
+    static double begin = CycleTimer::currentSeconds();
+    double cur = CycleTimer::currentSeconds();
 
-    double elapsed_secs = double(cur - begin) / CLOCKS_PER_SEC;
+    double elapsed_secs = cur - begin;
 
     glm::vec3 camPos(glm::sin(elapsed_secs) * 5.0f, 0.f, glm::cos(elapsed_secs) * 5.0f);
     glm::vec3 camLook(0.f, 0.f, 0.f);

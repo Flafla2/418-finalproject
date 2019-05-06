@@ -155,7 +155,7 @@ const Image* CudaRenderer::getImage() {
     // Need to copy contents of the rendered image from device memory
     // before we expose the Image object to the caller
 
-    printf("Copying image data from device\n");
+    //printf("Copying image data from device\n");
 
     cudaCheckError( cudaMemcpy(image->data,
                cudaDeviceImageData,
@@ -277,7 +277,7 @@ void CudaRenderer::render() {
     double cur = CycleTimer::currentSeconds();
 
     double elapsed_secs = cur - begin;
-    printf("Time elapsed: %f\n", elapsed_secs);
+    //printf("Time elapsed: %f\n", elapsed_secs);
 
     glm::vec3 camPos(glm::sin(elapsed_secs) * 5.0f, 0.f, glm::cos(elapsed_secs) * 5.0f);
     glm::vec3 camLook(0.f, 0.f, 0.f);
