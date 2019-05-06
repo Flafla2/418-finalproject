@@ -29,11 +29,18 @@ static void appendStruct(std::vector<char> &vec, T const& data) {
     vec.insert(vec.end(), raw, raw + sizeof(T));
 }
 
+static void makeAligned(std::vector<char> &vec, char align = 16) {
+    int count = (align - vec.size() % align) % align;
+    for (int x = 0; x < count; ++x)
+        vec.push_back((char)0x00);
+}
+
 __host__
 static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
     RefSphere const*sphere = dynamic_cast<RefSphere const*>(cur);
     if (sphere) {
         ret.push_back(CudaOpcodes::Sphere);
+        makeAligned(ret);
         appendStruct(ret, CudaSphere(sphere));
         return;
     }
@@ -41,6 +48,7 @@ static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
     RefBox const*box = dynamic_cast<RefBox const*>(cur);
     if (box) {
         ret.push_back(CudaOpcodes::Box);
+        makeAligned(ret);
         appendStruct(ret, CudaBox(box));
         return;
     }
@@ -48,6 +56,7 @@ static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
     RefTorus const*torus = dynamic_cast<RefTorus const*>(cur);
     if (torus) {
         ret.push_back(CudaOpcodes::Torus);
+        makeAligned(ret);
         appendStruct(ret, CudaTorus(torus));
         return;
     }
@@ -55,6 +64,7 @@ static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
     RefCylinder const*cylinder = dynamic_cast<RefCylinder const*>(cur);
     if (cylinder) {
         ret.push_back(CudaOpcodes::Cylinder);
+        makeAligned(ret);
         appendStruct(ret, CudaCylinder(cylinder));
         return;
     }
@@ -62,6 +72,7 @@ static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
     RefCone const*cone = dynamic_cast<RefCone const*>(cur);
     if (cone) {
         ret.push_back(CudaOpcodes::Cone);
+        makeAligned(ret);
         appendStruct(ret, CudaCone(cone));
         return;
     }
@@ -69,6 +80,7 @@ static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
     RefPlane const*plane = dynamic_cast<RefPlane const*>(cur);
     if (plane) {
         ret.push_back(CudaOpcodes::Plane);
+        makeAligned(ret);
         appendStruct(ret, CudaPlane(plane));
         return;
     }
@@ -110,6 +122,7 @@ static void appendPrimitive(std::vector<char> &ret, RefPrimitive const* cur) {
                 ret.push_back(0x02);
                 break;
         }
+        makeAligned(ret, sizeof(float));
         appendStruct<float>(ret, combineSmooth->smoothing);
         return;
     }
@@ -141,6 +154,11 @@ CudaScene::CudaScene(std::vector<RefPrimitive *> const& prims) {
 
 CudaScene::~CudaScene() = default;
 
+__device__ static inline void alignPC(int &pc, char align = 16) {
+    int count = (align - pc % align) % align;
+    pc += count;
+}
+
 // Maximum depth of instruction stack
 #define STACK_SIZE 64
 
@@ -159,36 +177,42 @@ __device__ float deviceSdf(glm::vec3 p) {
 
         switch(instruction) {
             case CudaOpcodes::Sphere: {
+                alignPC(pc);
                 CudaSphere const *s = reinterpret_cast<CudaSphere const *>(&bytecode[pc]);
                 stack[++sc] = SphereSDF(*s, p);
                 pc += sizeof(CudaSphere);
                 break;
             }
             case CudaOpcodes::Box: {
+                alignPC(pc);
                 CudaBox const *b = reinterpret_cast<CudaBox const*>(&bytecode[pc]);
                 stack[++sc] = BoxSDF(*b, p);
                 pc += sizeof(CudaBox);
                 break;
             }
             case CudaOpcodes::Torus: {
+                alignPC(pc);
                 CudaTorus const *t = reinterpret_cast<CudaTorus const*>(&bytecode[pc]);
                 stack[++sc] = TorusSDF(*t, p);
                 pc += sizeof(CudaTorus);
                 break;
             }
             case CudaOpcodes::Cylinder: {
+                alignPC(pc);
                 CudaCylinder const *c = reinterpret_cast<CudaCylinder const*>(&bytecode[pc]);
                 stack[++sc] = CylinderSDF(*c, p);
                 pc += sizeof(CudaTorus);
                 break;
             }
             case CudaOpcodes::Cone: {
+                alignPC(pc);
                 CudaCone const *k = reinterpret_cast<CudaCone const*>(&bytecode[pc]);
                 stack[++sc] = ConeSDF(*k, p);
                 pc += sizeof(CudaCone);
                 break;
             }
             case CudaOpcodes::Plane: {
+                alignPC(pc);
                 CudaPlane const *l = reinterpret_cast<CudaPlane const*>(&bytecode[pc]);
                 stack[++sc] = PlaneSDF(*l, p);
                 pc += sizeof(CudaPlane);
@@ -215,10 +239,12 @@ __device__ float deviceSdf(glm::vec3 p) {
             case CudaOpcodes::CombineSmooth: {
                 float d1 = stack[sc--];
                 float d2 = stack[sc--];
-                float smoothing = *(reinterpret_cast<float const*>(&bytecode[pc + 1]));
+                char op = bytecode[pc++];
+                alignPC(pc, sizeof(float));
+                float smoothing = *(reinterpret_cast<float const*>(&bytecode[pc]));
 
                 float h;
-                switch(bytecode[pc]) {
+                switch(op) {
                     case 0x00: // union
                         h = glm::clamp( 0.5 + 0.5 * (d2 - d1) / smoothing, 0.0, 1.0 );
                         stack[++sc] = glm::mix( d2, d1, h ) - smoothing * h * (1.0 - h);
@@ -233,7 +259,7 @@ __device__ float deviceSdf(glm::vec3 p) {
                         break;
                     default: break;
                 }
-                pc += sizeof(float) + 1;
+                pc += sizeof(float);
                 break;
             }
         }
