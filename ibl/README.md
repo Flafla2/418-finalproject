@@ -4,9 +4,11 @@
 
 Source: https://github.com/ixchow/15-466-ibl/tree/master/meshes
 
+Used with permission.
+
 ## Usage
 
-Utilities to convert from .hdr files into cubemaps for in-game IBL.
+Utilities to convert from .hdr files into cubemaps for in-game IBL.  Modified for specific use with the CUDA raymarching engine.
 
 Example HDRI is "cape_hill_4k.hdr" from:
 https://hdrihaven.com/hdri/?c=outdoor&h=cape_hill
