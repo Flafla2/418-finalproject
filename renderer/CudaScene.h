@@ -38,6 +38,7 @@ namespace CudaOpcodes {
     // CombineOp: 0x00 for union, 0x01 for diff, 0x02 for isect
     // Consumes 2 sdfs from float stack and pushes 1 combined sdf
     const char Combine = 0x07;
+
     // Args: byte CombineOp, float smoothing
     // CombineOp: 0x00 for union, 0x01 for diff, 0x02 for isect
     // smoothing: smoothing factor in world units

@@ -9,7 +9,7 @@ include(CheckLanguage)
 add_library( raymarcher-common INTERFACE )
 target_sources( raymarcher-common INTERFACE renderer.h cycleTimer.h util.h sceneLoader.h image.h )
 
-add_library( raymarcher-seq STATIC refRenderer.h refRenderer.cpp RefScene.cpp RefScene.h RefPrimitive.cpp RefPrimitive.h)
+add_library( raymarcher-seq STATIC refRenderer.h refRenderer.cpp RefScene.cpp RefScene.h RefPrimitive.cpp RefPrimitive.h Cubemap.cpp Cubemap.h)
 target_link_libraries( raymarcher-seq PUBLIC raymarcher-common )
 
 target_compile_features(raymarcher-seq PUBLIC cxx_std_11)
@@ -22,10 +22,12 @@ add_executable( raymarcher
   platformgl.h
   ppm.h
   ppm.cpp
-  sceneLoader.cpp )
+  sceneLoader.cpp
+  Cubemap.cpp
+  Cubemap.h )
 target_link_libraries( raymarcher PUBLIC raymarcher-seq )
 
-# include GLM
+# include GLM, image loader, etc
 include_directories( include/ )
 
 find_package(OpenGL REQUIRED)
@@ -44,7 +46,7 @@ if(CMAKE_CUDA_COMPILER)
 
   add_compile_definitions(WITH_CUDA)
 
-  add_library( raymarcher-cuda STATIC cudaRenderer.h cudaRenderer.cu CudaScene.cu CudaScene.h CudaPrimitive.cu CudaPrimitive.h cuda_error.h cuda_constants.h)
+  add_library( raymarcher-cuda STATIC cudaRenderer.h cudaRenderer.cu CudaScene.cu CudaScene.h CudaPrimitive.cu CudaPrimitive.h cuda_error.h cuda_constants.h Cubemap.cu Cubemap.h )
   set_property(TARGET raymarcher-cuda
           PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 

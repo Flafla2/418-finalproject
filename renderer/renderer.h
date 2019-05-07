@@ -1,6 +1,8 @@
 #ifndef __RENDERER_H__
 #define __RENDERER_H__
 
+#include "Cubemap.h"
+
 struct Image;
 
 typedef enum {
@@ -32,6 +34,8 @@ public:
 
     virtual void render() = 0;
 
+    PngImage lighting; // Lighting using IBL
+    PngImage background; // Background texture
 };
 
 

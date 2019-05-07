@@ -8,6 +8,7 @@
 #include "cudaRenderer.h"
 #endif
 #include "platformgl.h"
+#include "Cubemap.h"
 
 
 void startRendererWithDisplay(Renderer* renderer, bool printStats = true);
@@ -22,6 +23,8 @@ void usage(const char* progname) {
     printf("Program Options:\n");
     printf("  -b  --bench <START:END>    Benchmark mode, do not create display. Time frames [START,END)\n");
     printf("                             Requires CUDA-capable machine.\n");
+    printf("  -g  --bg <FILENAME>        Use image file for background / reflections\n");
+    printf("  -i  --ibl <FILENAME>       Use image file for image based lighting\n");
     printf("  -c  --check                Check correctness of output.  Requires CUDA-capable machine.\n");
     printf("  -f  --file  <FILENAME>     Dump frames in benchmark mode (FILENAME_xxxx.ppm)\n");
     printf("  -r  --renderer <ref/cuda>  Select renderer: ref or cuda\n");
@@ -43,11 +46,15 @@ int main(int argc, char** argv)
 
     std::string sceneNameStr;
     std::string frameFilename;
+    std::string iblPath;
+    std::string bgPath;
     SceneName sceneName;
     bool useRefRenderer = true;
     bool frameData = false;
     bool checkCorrectness = false;
     bool emitBytecode = false;
+    bool useIbl = false;
+    bool useBg = false;
 
     // parse commandline options ////////////////////////////////////////////
     int opt;
@@ -61,10 +68,12 @@ int main(int argc, char** argv)
         {"height",   1, 0,  'h'},
         {"frame-data", 1, 0, 'd'},
         {"emit-bytecode", 1, 0, 'e'},
+        {"ibl", 1, 0, 'i'},
+        {"bg", 1, 0, 'g'},
         {0 ,0, 0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "b:f:r:w:h:c?de", long_options, nullptr)) != EOF) {
+    while ((opt = getopt_long(argc, argv, "b:f:r:w:h:c?dei:g:", long_options, nullptr)) != EOF) {
 
         switch (opt) {
         case 'b':
@@ -96,6 +105,14 @@ int main(int argc, char** argv)
             break;
         case 'e':
             emitBytecode = true;
+            break;
+        case 'i':
+            iblPath = optarg;
+            useIbl = true;
+            break;
+        case 'g':
+            bgPath = optarg;
+            useBg = true;
             break;
         case '?':
         default:
@@ -181,6 +198,28 @@ int main(int argc, char** argv)
         
         renderer = new RefRenderer();
 #endif
+
+        if(useIbl) {
+            renderer->lighting = load_image(iblPath.data());
+        } else {
+            renderer->lighting = PngImage();
+            renderer->lighting.texture = nullptr;
+            renderer->lighting.rgb_exp = nullptr;
+            renderer->lighting.h = 0;
+            renderer->lighting.w = 0;
+            renderer->lighting.n = 0;
+        }
+
+        if(useBg) {
+            renderer->background = load_image(bgPath.data());
+        } else {
+            renderer->background = PngImage();
+            renderer->background.texture = nullptr;
+            renderer->background.rgb_exp = nullptr;
+            renderer->background.h = 0;
+            renderer->background.w = 0;
+            renderer->background.n = 0;
+        }
 
         renderer->allocOutputImage(imageWidth, imageHeight);
         renderer->loadScene(sceneName);
