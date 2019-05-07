@@ -10,7 +10,7 @@
 #include "platformgl.h"
 
 
-void startRendererWithDisplay(Renderer* renderer);
+void startRendererWithDisplay(Renderer* renderer, bool printStats = true);
 void startBenchmark(Renderer* renderer, int startFrame, int totalFrames, const std::string& frameFilename);
 void CheckBenchmark(Renderer* ref_renderer, Renderer* cuda_renderer,
                         int benchmarkFrameStart, int totalFrames, const std::string& frameFilename);
@@ -25,8 +25,10 @@ void usage(const char* progname) {
     printf("  -c  --check                Check correctness of output.  Requires CUDA-capable machine.\n");
     printf("  -f  --file  <FILENAME>     Dump frames in benchmark mode (FILENAME_xxxx.ppm)\n");
     printf("  -r  --renderer <ref/cuda>  Select renderer: ref or cuda\n");
+    printf("  -d  --frame-data           Print frame timing data (Clear/Advance/Render)");
     printf("  -w  --width  <INT>         Set width (default: 800px)\n");
     printf("  -h  --height <INT>         Set height (default: 600px)\n");
+    printf("  -e  --emit-bytecode        Emit CUDA bytecode (requires running in CUDA mode)\n");
     printf("  -?  --help                 This message\n");
 }
 
@@ -43,8 +45,9 @@ int main(int argc, char** argv)
     std::string frameFilename;
     SceneName sceneName;
     bool useRefRenderer = true;
-
+    bool frameData = false;
     bool checkCorrectness = false;
+    bool emitBytecode = false;
 
     // parse commandline options ////////////////////////////////////////////
     int opt;
@@ -56,10 +59,12 @@ int main(int argc, char** argv)
         {"renderer", 1, 0,  'r'},
         {"width",    1, 0,  'w'},
         {"height",   1, 0,  'h'},
+        {"frame-data", 1, 0, 'd'},
+        {"emit-bytecode", 1, 0, 'e'},
         {0 ,0, 0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "b:f:r:w:h:c?", long_options, NULL)) != EOF) {
+    while ((opt = getopt_long(argc, argv, "b:f:r:w:h:c?de", long_options, nullptr)) != EOF) {
 
         switch (opt) {
         case 'b':
@@ -86,6 +91,12 @@ int main(int argc, char** argv)
         case 'h':
             imageHeight = atoi(optarg);
             break;
+        case 'd':
+            frameData = true;
+            break;
+        case 'e':
+            emitBytecode = true;
+            break;
         case '?':
         default:
             usage(argv[0]);
@@ -103,9 +114,22 @@ int main(int argc, char** argv)
 
     sceneNameStr = argv[optind];
 
-    if (sceneNameStr.compare("test") == 0) {
-        sceneName = TEST_SCENE;
-    } else {
+    if (sceneNameStr.compare("test1") == 0) {
+        sceneName = TEST_SCENE1;
+    }
+    else if (sceneNameStr.compare("test2") == 0) {
+        sceneName = TEST_SCENE2;
+    }
+    else if (sceneNameStr.compare("test3") == 0) {
+        sceneName = TEST_SCENE3;
+    }
+    else if (sceneNameStr.compare("test4") == 0) {
+        sceneName = TEST_SCENE4;
+    }
+    else if (sceneNameStr.compare("test5") == 0) {
+        sceneName = TEST_SCENE5;
+    }
+    else {
         fprintf(stderr, "Unknown scene name (%s)\n", sceneNameStr.c_str());
         usage(argv[0]);
         return 1;
@@ -144,8 +168,11 @@ int main(int argc, char** argv)
 #if WITH_CUDA
         if (useRefRenderer)
             renderer = new RefRenderer();
-        else
-            renderer = new CudaRenderer();
+        else {
+            CudaRenderer *cr = new CudaRenderer();
+            cr->emitBytecode = emitBytecode;
+            renderer = cr;
+        }
 #else
         if (!useRefRenderer) {
             fprintf(stderr, "Rendering with CUDA is not supported when compiling without CUDA.\n");
@@ -163,7 +190,7 @@ int main(int argc, char** argv)
             startBenchmark(renderer, benchmarkFrameStart, benchmarkFrameEnd - benchmarkFrameStart, frameFilename);
         else {
             glutInit(&argc, argv);
-            startRendererWithDisplay(renderer);
+            startRendererWithDisplay(renderer, frameData);
         }
     }
 

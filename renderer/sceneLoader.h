@@ -11,7 +11,7 @@
 
 namespace SceneLoader {
 #if WITH_CUDA
-    CudaScene *loadSceneCuda(SceneName sceneName);
+    CudaScene *loadSceneCuda(SceneName sceneName, bool emitBytecode = false);
 #endif
     RefScene *loadSceneRef(SceneName sceneName);
 }

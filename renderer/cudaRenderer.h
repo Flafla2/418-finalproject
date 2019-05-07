@@ -35,6 +35,8 @@ public:
     void advanceAnimation() override;
 
     void render() override;
+
+    bool emitBytecode = false;
 };
 
 #endif

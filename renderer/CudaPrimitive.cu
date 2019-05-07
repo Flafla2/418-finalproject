@@ -2,7 +2,6 @@
 #include <cuda_runtime.h>
 
 #define GLM_FORCE_CUDA
-#define GLM_FORCE_SWIZZLE
 #include <glm/glm.hpp>
 #include <glm/geometric.hpp>
 
@@ -24,20 +23,20 @@ float BoxSDF(CudaBox const& box, glm::vec3 p) {
 __device__ __host__
 float TorusSDF(CudaTorus const& torus, glm::vec3 p) {
     p = torus.world2local * glm::vec4(p, 1.f);
-    glm::vec2 q = glm::vec2(glm::length(p.xz()) - torus.radius, p.y);
+    glm::vec2 q = glm::vec2(glm::length(glm::vec2(p.x,p.z)) - torus.radius, p.y);
     return glm::length(q) - torus.thickness;
 }
 
 __device__ __host__
 float CylinderSDF(CudaCylinder const& cylinder, glm::vec3 p) {
     p = cylinder.world2local * glm::vec4(p, 1.f);
-    return glm::length(p.xz()) - cylinder.radius;
+    return glm::length(glm::vec2(p.x,p.z)) - cylinder.radius;
 }
 
 __device__ __host__
 float ConeSDF(CudaCone const& cone, glm::vec3 p) {
     p = cone.world2local * glm::vec4(p, 1.f);
-    float q = glm::length(p.xy());
+    float q = glm::length(glm::vec2(p.x,p.y));
     return glm::dot(cone.dir, glm::vec2(q, p.z));
 }
 

@@ -130,7 +130,7 @@ __global__ void kernelRender(glm::mat4x4 invProj, glm::mat4x4 invView, glm::vec3
 
     float4* imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pixelY * imageWidth + pixelX)]);
     float2 pixelCenterNorm = make_float2(invWidth * (static_cast<float>(pixelX) + 0.5f),
-                                         invHeight * (static_cast<float>(pixelY) + 0.5f));
+                                         1.0f - invHeight * (static_cast<float>(pixelY) + 0.5f));
     shadePixel(pixelCenterNorm, imgPtr, invProj, invView, camPos);
 }
 
@@ -155,7 +155,7 @@ const Image* CudaRenderer::getImage() {
     // Need to copy contents of the rendered image from device memory
     // before we expose the Image object to the caller
 
-    printf("Copying image data from device\n");
+    //printf("Copying image data from device\n");
 
     cudaCheckError( cudaMemcpy(image->data,
                cudaDeviceImageData,
@@ -167,7 +167,7 @@ const Image* CudaRenderer::getImage() {
 
 void CudaRenderer::loadScene(SceneName name) {
     sceneName = name;
-    scene = SceneLoader::loadSceneCuda(sceneName);
+    scene = SceneLoader::loadSceneCuda(sceneName, emitBytecode);
 }
 
 void CudaRenderer::setup() {
@@ -277,7 +277,7 @@ void CudaRenderer::render() {
     double cur = CycleTimer::currentSeconds();
 
     double elapsed_secs = cur - begin;
-    printf("Time elapsed: %f\n", elapsed_secs);
+    //printf("Time elapsed: %f\n", elapsed_secs);
 
     glm::vec3 camPos(glm::sin(elapsed_secs) * 5.0f, 0.f, glm::cos(elapsed_secs) * 5.0f);
     glm::vec3 camLook(0.f, 0.f, 0.f);
