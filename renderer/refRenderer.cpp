@@ -97,7 +97,13 @@ void RefRenderer::shadePixel(
             // hit something!
             glm::vec3 normal = scene->normal(p);
 
-            if(!lighting.rgb_exp) {
+            if(perfVis) {
+                pixelData[2] = 1.f - float(march) / 64;
+                pixelData[2] = pixelData[2]*pixelData[2]*pixelData[2];
+                pixelData[1] = 0;
+                pixelData[0] = 1 - pixelData[2];
+                pixelData[3] = 1;
+            } else if(!lighting.rgb_exp) {
                 const float rt1_3 = 0.5773502692f;
                 float ndotl = glm::dot(normal, -glm::vec3(rt1_3,-rt1_3,rt1_3));
 
@@ -112,10 +118,6 @@ void RefRenderer::shadePixel(
                 pixelData[2] = l.b;
                 pixelData[3] = l.a;
             }
-//            pixelData[2] = glm::pow(1.f - float(march) / 64, 3.f);
-//            pixelData[1] = 0;
-//            pixelData[0] = 1 - pixelData[2];
-//            pixelData[3] = 1;
 
             return;
         } else if (t > 10.0f) {
@@ -126,7 +128,12 @@ void RefRenderer::shadePixel(
 
     }
 
-    if (background.rgb_exp) {
+    if(perfVis) {
+        pixelData[2] = glm::pow(1.f - float(march) / 64, 3.f);
+        pixelData[1] = 0;
+        pixelData[0] = 1 - pixelData[2];
+        pixelData[3] = 1;
+    } else if (background.rgb_exp) {
         glm::vec2 uv = Cubemap::dir2uv(ray);
         glm::vec4 res = sample_exp(background,uv);
         //std::cout << res.r << "," << res.g << "," << res.b << std::endl;
@@ -140,10 +147,7 @@ void RefRenderer::shadePixel(
         pixelData[2] = (ray.z+1)/2;
         pixelData[3] = 1.0;
     }
-//    pixelData[2] = glm::pow(1.f - float(march) / 64, 3.f);
-//    pixelData[1] = 0;
-//    pixelData[0] = 1 - pixelData[2];
-//    pixelData[3] = 1;
+
 }
 
 void RefRenderer::render() {

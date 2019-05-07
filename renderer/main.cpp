@@ -32,6 +32,7 @@ void usage(const char* progname) {
     printf("  -w  --width  <INT>         Set width (default: 800px)\n");
     printf("  -h  --height <INT>         Set height (default: 600px)\n");
     printf("  -e  --emit-bytecode        Emit CUDA bytecode (requires running in CUDA mode)\n");
+    printf("  -v  --visualize-perf       Visualize performace characteristics\n");
     printf("  -?  --help                 This message\n");
 }
 
@@ -55,6 +56,7 @@ int main(int argc, char** argv)
     bool emitBytecode = false;
     bool useIbl = false;
     bool useBg = false;
+    bool perfVis = false;
 
     // parse commandline options ////////////////////////////////////////////
     int opt;
@@ -70,10 +72,11 @@ int main(int argc, char** argv)
         {"emit-bytecode", 1, 0, 'e'},
         {"ibl", 1, 0, 'i'},
         {"bg", 1, 0, 'g'},
+        {"visualize-perf", 1, 0, 'v'},
         {0 ,0, 0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "b:f:r:w:h:c?dei:g:", long_options, nullptr)) != EOF) {
+    while ((opt = getopt_long(argc, argv, "b:f:r:w:h:c?dei:g:v", long_options, nullptr)) != EOF) {
 
         switch (opt) {
         case 'b':
@@ -113,6 +116,9 @@ int main(int argc, char** argv)
         case 'g':
             bgPath = optarg;
             useBg = true;
+            break;
+        case 'v':
+            perfVis = true;
             break;
         case '?':
         default:
@@ -220,6 +226,8 @@ int main(int argc, char** argv)
             renderer->background.w = 0;
             renderer->background.n = 0;
         }
+
+        renderer->perfVis = perfVis;
 
         renderer->allocOutputImage(imageWidth, imageHeight);
         renderer->loadScene(sceneName);

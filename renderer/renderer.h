@@ -36,6 +36,7 @@ public:
 
     PngImage lighting; // Lighting using IBL
     PngImage background; // Background texture
+    bool perfVis;
 };
 
 

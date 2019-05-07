@@ -87,39 +87,43 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
         if (sdf < 0.01f) {
             // hit something!
             glm::vec3 normal = deviceNormal(p);
-            if(cuConstRendererParams.lighting.rgb_exp == nullptr) {
-                const float rt1_3 = 0.5773502692f;
-                float ndotl = glm::dot(normal, -glm::vec3(rt1_3,-rt1_3,rt1_3));
+            if(!cuConstRendererParams.perfVis) {
+                if(cuConstRendererParams.lighting.rgb_exp == nullptr) {
+                    const float rt1_3 = 0.5773502692f;
+                    float ndotl = glm::dot(normal, -glm::vec3(rt1_3,-rt1_3,rt1_3));
 
-                ret.x = ndotl;
-                ret.y = ndotl;
-                ret.z = ndotl;
-                ret.w = 1.0;
-            } else {
-                glm::vec2 uv = Cubemap::dir2uv(normal);
+                    ret.x = ndotl;
+                    ret.y = ndotl;
+                    ret.z = ndotl;
+                    ret.w = 1.0;
+                } else {
+                    glm::vec2 uv = Cubemap::dir2uv(normal);
 
-                glm::vec4 l = sample_exp(cuConstRendererParams.lighting,uv);
-                ret.x = l.r;
-                ret.y = l.g;
-                ret.z = l.b;
-                ret.w = l.a;
+                    glm::vec4 l = sample_exp(cuConstRendererParams.lighting,uv);
+                    ret.x = l.r;
+                    ret.y = l.g;
+                    ret.z = l.b;
+                    ret.w = l.a;
+                }
             }
 
             break;
         } else if (t > 10.0f) {
-            if (cuConstRendererParams.background.rgb_exp != nullptr) {
-                glm::vec2 uv = Cubemap::dir2uv(ray);
-                glm::vec4 res = sample_exp(cuConstRendererParams.background,uv);
-                //std::cout << res.r << "," << res.g << "," << res.b << std::endl;
-                ret.x = res.r;
-                ret.y = res.g;
-                ret.z = res.b;
-                ret.w = res.a;
-            } else {
-                ret.x = (ray.x + 1) / 2;
-                ret.y = (ray.y + 1) / 2;
-                ret.z = (ray.z + 1) / 2;
-                ret.w = 1.0;
+            if(!cuConstRendererParams.perfVis) {
+                if (cuConstRendererParams.background.rgb_exp != nullptr) {
+                    glm::vec2 uv = Cubemap::dir2uv(ray);
+                    glm::vec4 res = sample_exp(cuConstRendererParams.background,uv);
+                    //std::cout << res.r << "," << res.g << "," << res.b << std::endl;
+                    ret.x = res.r;
+                    ret.y = res.g;
+                    ret.z = res.b;
+                    ret.w = res.a;
+                } else {
+                    ret.x = (ray.x + 1) / 2;
+                    ret.y = (ray.y + 1) / 2;
+                    ret.z = (ray.z + 1) / 2;
+                    ret.w = 1.0;
+                }
             }
 
             break;
@@ -129,7 +133,7 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
 
     }
 
-    if (march >= MAX_STEPS) {
+    if (march >= MAX_STEPS && !cuConstRendererParams.perfVis) {
         if (cuConstRendererParams.background.rgb_exp != nullptr) {
             glm::vec2 uv = Cubemap::dir2uv(ray);
             glm::vec4 res = sample_exp(cuConstRendererParams.background,uv);
@@ -144,6 +148,14 @@ shadePixel(float2 pixelCenter, float4* imagePtr, glm::mat4x4 invProj,
             ret.z = (ray.z + 1) / 2;
             ret.w = 1.0;
         }
+    }
+
+    if (cuConstRendererParams.perfVis) {
+        ret.z = 1.f - float(march) / 64;
+        ret.z = ret.z * ret.z * ret.z; // pow(3)
+        ret.y = 0;
+        ret.x = 1.0f - ret.z;
+        ret.w = 1;
     }
 
     // Global memory write
@@ -260,6 +272,7 @@ void CudaRenderer::setup() {
     params.imageWidth = image->width;
     params.imageHeight = image->height;
     params.imageData = cudaDeviceImageData;
+    params.perfVis = perfVis;
 
     params.background = PngImage();
     params.background.texture = nullptr;

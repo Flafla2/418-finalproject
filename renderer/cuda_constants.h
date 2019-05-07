@@ -11,6 +11,8 @@ struct GlobalConstants {
     int imageHeight;
     float* imageData;
 
+    bool perfVis;
+
     PngImage background;
     PngImage lighting;
 };
