@@ -2,6 +2,7 @@
 #define __CUDA_CONSTANTS_STRUCTS__
 
 #include "renderer.h"
+#include "Cubemap.h"
 
 struct GlobalConstants {
     SceneName sceneName;
@@ -9,6 +10,11 @@ struct GlobalConstants {
     int imageWidth;
     int imageHeight;
     float* imageData;
+
+    bool perfVis;
+
+    PngImage background;
+    PngImage lighting;
 };
 
 struct SceneConstants {

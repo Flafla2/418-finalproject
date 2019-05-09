@@ -85,8 +85,10 @@ void RefRenderer::shadePixel(
 
     glm::vec3 ray = glm::normalize(ptWorld - camPos);
 
+
     float t = 0.f;
-    for (int march = 0; march < 64; ++march) {
+    int march = 0;
+    for (march = 0; march < 64; ++march) {
 
         glm::vec3 p = camPos + ray * t;
         float sdf = scene->sdf(p);
@@ -94,11 +96,28 @@ void RefRenderer::shadePixel(
         if (sdf < 0.01f) {
             // hit something!
             glm::vec3 normal = scene->normal(p);
-            const float rt1_3 = 0.5773502692f;
-            float ndotl = glm::dot(normal, -glm::vec3(rt1_3,-rt1_3,rt1_3));
 
-            pixelData[0] = pixelData[1] = pixelData[2] = ndotl;
-            pixelData[3] = 1.0f;
+            if(perfVis) {
+                pixelData[2] = 1.f - float(march) / 64;
+                pixelData[2] = pixelData[2]*pixelData[2]*pixelData[2];
+                pixelData[1] = 0;
+                pixelData[0] = 1 - pixelData[2];
+                pixelData[3] = 1;
+            } else if(!lighting.rgb_exp) {
+                const float rt1_3 = 0.5773502692f;
+                float ndotl = glm::dot(normal, -glm::vec3(rt1_3,-rt1_3,rt1_3));
+
+                pixelData[0] = pixelData[1] = pixelData[2] = ndotl;
+                pixelData[3] = 1.0f;
+            } else {
+                glm::vec2 uv = Cubemap::dir2uv(normal);
+
+                glm::vec4 l = sample_exp(lighting,uv);
+                pixelData[0] = l.r;
+                pixelData[1] = l.g;
+                pixelData[2] = l.b;
+                pixelData[3] = l.a;
+            }
 
             return;
         } else if (t > 10.0f) {
@@ -109,10 +128,26 @@ void RefRenderer::shadePixel(
 
     }
 
-    pixelData[0] = (ray.x+1)/2;
-    pixelData[1] = (ray.y+1)/2;
-    pixelData[2] = (ray.z+1)/2;
-    pixelData[3] = 1.0;
+    if(perfVis) {
+        pixelData[2] = glm::pow(1.f - float(march) / 64, 3.f);
+        pixelData[1] = 0;
+        pixelData[0] = 1 - pixelData[2];
+        pixelData[3] = 1;
+    } else if (background.rgb_exp) {
+        glm::vec2 uv = Cubemap::dir2uv(ray);
+        glm::vec4 res = sample_exp(background,uv);
+        //std::cout << res.r << "," << res.g << "," << res.b << std::endl;
+        pixelData[0] = res.r;
+        pixelData[1] = res.g;
+        pixelData[2] = res.b;
+        pixelData[3] = res.a;
+    } else {
+        pixelData[0] = (ray.x+1)/2;
+        pixelData[1] = (ray.y+1)/2;
+        pixelData[2] = (ray.z+1)/2;
+        pixelData[3] = 1.0;
+    }
+
 }
 
 void RefRenderer::render() {
