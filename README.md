@@ -34,12 +34,14 @@ $ ./raymarcher test
 
 *Raymarching* is a modification of raytracing that is suitable for real-time applications.  On a high level, a raymarching-based renderer has the same structure as a raytracer: for each pixel of a rendered image, rays are cast into a scene and the final color of each pixel is computed as a function of the raycast hit point, hit normal, and surface material.  In raytracing, we compute ray-primitive intersections "directly," that is, the raytracer executes an expression for each primitive that computes if / where each camera ray intersects that primitive.  Acceleration structures (such as a BVH) are used to reduce the number of these ray-primitive intersection queries.  Raymarching offers an alternative approach: we "march" a point along the ray until we find that the point intersects an object.  Instead of describing the scene as a list of primitives, we can create a description called a *signed distance field* (SDF).  The SDF is a scalar field that yields, for each point, the shortest distance from that point to the rest of the scene.  If the point is inside an object, the SDF is negative.  A SDF scene representation allows an optimized raymarcher to efficiently traverse the scene.
 
-![readme-images/Figure1.png]()
+![](readme-images/Figure1.png)
+
 *Left: Visualization of Ray-Primitive intersection in Raytracing.  Middle: Naive Raymarching; Red circles represent sample points.  Right: Raymarching using SDFs; dotted green line lines (radius of the blue circles) point to the closest surface in the scene (Biagioli 2016).*
 
 The distance field functions themselves are well known and did not have to be derived by us.  For example, the distance field descriptions of a sphere and a box are listed below.
 
-![readme-images/Figure2.png]()
+![](readme-images/Figure2.png)
+
 *Distance fields for a Sphere and a Box (Quilez, n.d.)*
 
 In a realtime game workload, raymarching is commonly implemented by first rendering a scene with traditional rasterization-based methods, and then rendering a quad that covers the entire screen.  This quad is rendered with a special shader that performs the raymarching algorithm with the rasterizer’s depth buffer as input (if the march ray crosses the depth buffer value, then raymarching is discarded for that pixel; see Biagioli 2016 for details).  For example, this approach was used to render volumetric clouds in real time on a PS4 in the game *Horizon: Zero Dawn* (Schneider and Voss, 2015).  In this case the entire scene representation is stored in the distance field function (i.e. in the code itself).  It is generally impossible to change the scene dynamically with this method, because shaders are compiled ahead of time and graphics APIs do not expose the functionality to dynamically stream data from CPU to GPU.   CUDA offers an opportunity for fine-grained control over CPU / GPU communication and gives us the ability to build a raymarching renderer that doesn’t require constant recompilations when we alter the scene description.
@@ -144,11 +146,11 @@ As discussed previously, these combination operations will resolve to the SDF op
 
 Below is an example render from our system:
 
-![readme-images/Figure3.png]()
+![](readme-images/Figure3.png)
 
 Below is a heatmap render of the same scene, showcasing the performance characteristics of raymarched scenes.  Blue pixels use fewer raymarch steps, whereas red pixels use more raymarch steps.  Notice how the edges of round objects tend to use many steps: this is because at grazing angles the signed distance field grows smaller, but does not quickly intersect with the object.
 
-![readme-images/Figure4.png]()
+![](readme-images/Figure4.png)
 
 On average, we observed an approximately ~1000x speedup from the Reference implementation to our CUDA implementation.  Some benchmarks:
 
